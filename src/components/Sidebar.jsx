@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Dumbbell, Apple, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Dumbbell, Apple, Settings, LogOut,ClipboardList,Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar() {
@@ -10,7 +10,9 @@ export default function Sidebar() {
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Clientes', icon: Users, path: '/clientes' },
+    { name: 'Planes', icon: ClipboardList, path: '/planes' },
     { name: 'Suscripciones', icon: CreditCard, path: '/suscripciones' },
+    { name: 'Ejercicios', icon: Activity, path: '/ejercicios' },
     { name: 'Rutinas', icon: Dumbbell, path: '/rutinas' },
     { name: 'Nutrición', icon: Apple, path: '/nutricion' },
     { name: 'Configuración', icon: Settings, path: '/configuracion' },
