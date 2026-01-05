@@ -8,6 +8,9 @@ import AddStudent from './pages/AddStudent';
 import Plans from './pages/Plans';
 import Rutinas from './pages/Rutinas';
 import Exercises from './pages/Exercises';
+import Subscriptions from './pages/Subscriptions';
+import CreateRoutine from './pages/CreateRoutine';
+import Configuration from './pages/Configuration';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Cargando...</div>;
@@ -55,6 +58,21 @@ function App() {
           <Route path="/ejercicios" element={
             <ProtectedRoute>
               <Exercises />
+            </ProtectedRoute>
+          } />
+          <Route path="/suscripciones" element={
+            <ProtectedRoute>
+              <Subscriptions />
+            </ProtectedRoute>
+          } />
+          <Route path="/rutinas/nueva" element={
+            <ProtectedRoute>
+              <CreateRoutine />
+            </ProtectedRoute>
+          } />
+          <Route path="configuracion" element={
+            <ProtectedRoute>
+              <Configuration />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/login" />} />

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { Search, Plus, LayoutList, CheckCircle, Edit2, Dumbbell } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const Rutinas = () => {
-  const { user } = useAuth(); 
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [routines, setRoutines] = useState([]);
   const [selectedRoutine, setSelectedRoutine] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,27 +18,29 @@ const Rutinas = () => {
 
   // --- 1. CARGA DE DATOS ---
   useEffect(() => {
+    const fetchRoutines = async () => {
+      try {
+        // 2. USAMOS api.get EN LUGAR DE fetch
+        // Ya no hace falta poner headers ni token manual, api.js lo hace.
+        const response = await api.get('/routines');
+        
+        // Axios devuelve la data en .data. 
+        // Si tu API devuelve { data: [...] }, accedemos a response.data.data
+        // Si devuelve directo [...], accedemos a response.data
+        const data = response.data.data || response.data; 
+        
+        setRoutines(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error cargando rutinas:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchRoutines();
   }, []);
 
-  const fetchRoutines = async () => {
-    try {
-      // Ajusta tu URL local
-      const response = await fetch('http://127.0.0.1:8000/api/routines');
-      const data = await response.json();
-      
-      const loadedRoutines = Array.isArray(data) ? data : (data.data || []);
-      setRoutines(loadedRoutines);
-      
-      if (loadedRoutines.length > 0) {
-        setSelectedRoutine(loadedRoutines[0]);
-      }
-    } catch (error) {
-      console.error("Error cargando rutinas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
   // --- 2. HELPERS ---
   const translateLevel = (level) => {
@@ -62,9 +67,8 @@ const Rutinas = () => {
   const getStatusBadge = (status) => {
     const isPublished = status === 'Publicado';
     return (
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-        isPublished ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-      }`}>
+      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${isPublished ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+        }`}>
         {isPublished ? 'Publicado' : 'Borrador'}
       </span>
     );
@@ -77,11 +81,13 @@ const Rutinas = () => {
 
       {/* Contenedor Principal Ajustado */}
       <main className="flex-1 ml-64 p-6 flex flex-col h-full">
-        
+
         {/* HEADER (Compacto) */}
         <header className="flex justify-between items-center mb-4 shrink-0">
           <h1 className="text-2xl font-bold text-gray-800">Rutinas</h1>
-          <button className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium text-sm transition-colors shadow-sm">
+          <button
+            onClick={() => navigate('/rutinas/nueva')}
+            className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium text-sm transition-colors shadow-sm">
             <Plus size={16} />
             Crear Rutina
           </button>
@@ -89,10 +95,10 @@ const Rutinas = () => {
 
         {/* LAYOUT GRID: IZQUIERDA (Datos) vs DERECHA (Detalle Full Height) */}
         <div className="flex gap-6 h-full overflow-hidden">
-          
+
           {/* --- COLUMNA IZQUIERDA (Ancho Variable) --- */}
           <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-            
+
             {/* 1. TARJETAS DE ESTADÍSTICAS (Compactas) */}
             <div className="grid grid-cols-2 gap-4 shrink-0">
               {/* Card Total */}
@@ -119,21 +125,21 @@ const Rutinas = () => {
 
             {/* 2. TABLA Y FILTROS (Ocupa el resto del espacio vertical) */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col flex-1 overflow-hidden">
-              
+
               {/* Barra de Filtros */}
               <div className="p-3 border-b border-gray-100 flex gap-3 shrink-0">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                  <input 
-                    type="text" 
-                    placeholder="Buscar rutina..." 
+                  <input
+                    type="text"
+                    placeholder="Buscar rutina..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C2185B]"
                   />
                 </div>
                 {/* Filtro Dificultad (Sin filtro Estado) */}
-                <select 
+                <select
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white text-gray-600 outline-none focus:border-[#C2185B] cursor-pointer"
                   value={filterLevel}
                   onChange={(e) => setFilterLevel(e.target.value)}
@@ -150,7 +156,7 @@ const Rutinas = () => {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr className="text-gray-500 text-xs border-b border-gray-100 font-semibold uppercase tracking-wider">
-                      <th className="px-4 py-3">Nombre</th> 
+                      <th className="px-4 py-3">Nombre</th>
                       <th className="px-4 py-3 text-center">Duración</th>
                       <th className="px-4 py-3 text-center">Nivel</th>
                       <th className="px-4 py-3 text-center">Estado</th>
@@ -160,7 +166,7 @@ const Rutinas = () => {
                     {loading ? (
                       <tr><td colSpan="4" className="text-center p-8 text-gray-400">Cargando...</td></tr>
                     ) : filteredRoutines.map((routine) => (
-                      <tr 
+                      <tr
                         key={routine.id}
                         onClick={() => setSelectedRoutine(routine)}
                         className={`cursor-pointer transition-colors hover:bg-gray-50 ${selectedRoutine?.id === routine.id ? 'bg-pink-50/60' : ''}`}
@@ -178,14 +184,14 @@ const Rutinas = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* Footer Paginación */}
               <div className="p-2 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 shrink-0">
-                 <span>{filteredRoutines.length} resultados</span>
-                 <div className="flex gap-1">
-                    <button className="px-2 py-1 hover:bg-gray-100 rounded">Anterior</button>
-                    <button className="px-2 py-1 hover:bg-gray-100 rounded">Siguiente</button>
-                 </div>
+                <span>{filteredRoutines.length} resultados</span>
+                <div className="flex gap-1">
+                  <button className="px-2 py-1 hover:bg-gray-100 rounded">Anterior</button>
+                  <button className="px-2 py-1 hover:bg-gray-100 rounded">Siguiente</button>
+                </div>
               </div>
             </div>
           </div>
@@ -210,22 +216,22 @@ const Rutinas = () => {
 
                 {/* Lista de Ejercicios (Scrollable Independiente) */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
-                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">
                     Ejercicios ({selectedRoutine.exercises ? selectedRoutine.exercises.length : 0})
                   </h4>
 
                   {selectedRoutine.exercises && selectedRoutine.exercises.map((ex, idx) => (
                     <div key={idx} className="p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:border-pink-200 transition-colors">
                       <div className="flex justify-between items-start mb-2">
-                         <div className="flex gap-2 items-center">
-                            <span className="bg-gray-100 text-gray-500 text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                              {idx + 1}
-                            </span>
-                            <span className="font-semibold text-sm text-gray-800">{ex.name}</span>
-                         </div>
-                         <Edit2 size={14} className="text-gray-300 hover:text-[#C2185B] cursor-pointer"/>
+                        <div className="flex gap-2 items-center">
+                          <span className="bg-gray-100 text-gray-500 text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                            {idx + 1}
+                          </span>
+                          <span className="font-semibold text-sm text-gray-800">{ex.name}</span>
+                        </div>
+                        <Edit2 size={14} className="text-gray-300 hover:text-[#C2185B] cursor-pointer" />
                       </div>
-                      
+
                       {/* Grid de Datos del Ejercicio */}
                       <div className="grid grid-cols-3 gap-2 text-center text-xs bg-gray-50 p-2 rounded border border-gray-100">
                         <div>
@@ -245,10 +251,10 @@ const Rutinas = () => {
                   ))}
 
                   {(!selectedRoutine.exercises || selectedRoutine.exercises.length === 0) && (
-                     <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-                        <Dumbbell className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                        <p className="text-sm">Sin ejercicios asignados</p>
-                     </div>
+                    <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                      <Dumbbell className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                      <p className="text-sm">Sin ejercicios asignados</p>
+                    </div>
                   )}
                 </div>
 
