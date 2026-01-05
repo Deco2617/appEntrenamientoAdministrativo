@@ -101,10 +101,10 @@ const CreateRoutine = () => {
             });
             return;
         }
-        if (selectedExercises.length === 0) {
+        if (selectedExercises.length < 5) {
             setFeedback({
-                isOpen: true, type: 'error', title: 'Rutina vacía',
-                message: 'Debes agregar al menos un ejercicio antes de guardar.'
+                isOpen: true, type: 'error', title: 'Rutina incompleta',
+                message: 'Debes agregar al menos 5 ejercicios antes de guardar la rutina.'
             });
             return;
         }
@@ -127,7 +127,6 @@ const CreateRoutine = () => {
                 estimated_duration: durationInt,
                 description: `Rutina con ${selectedExercises.length} ejercicios.`,
                 exercises: exercisesPayload, // <--- ¡ESTO ES LO QUE FALTABA!
-                plan_id: null
             });
 
             // 3. ÉXITO
@@ -139,31 +138,34 @@ const CreateRoutine = () => {
             });
 
         } catch (error) {
-            console.error("Error guardando:", error);
+            console.error("Error capturado en el frontend:", error);
 
-            // 4. MANEJO DE ERRORES MEJORADO
-            let errorMsg = "Ocurrió un error inesperado.";
             let errorTitle = "Error de Servidor";
+            let errorMsg = "Ocurrió un error inesperado.";
 
             if (error.response) {
-                if (error.response.status === 422) {
+                // Extraemos la respuesta del servidor
+                const { status, data } = error.response;
+
+                if (status === 422) {
                     errorTitle = "Datos Inválidos";
-                    const errors = error.response.data.errors;
-                    // Intentamos leer el primer error disponible
-                    if (errors) {
-                        const firstKey = Object.keys(errors)[0];
-                        errorMsg = errors[firstKey][0];
+                    // Verificamos si vienen errores específicos de validación
+                    if (data.errors) {
+                        // Esto convierte {name: ["msg"]} en "msg" de forma segura
+                        errorMsg = Object.values(data.errors).flat().join(" ");
                     } else {
-                        errorMsg = error.response.data.message;
+                        errorMsg = data.message || "Error en los datos enviados.";
                     }
-                } else if (error.response.status === 409) {
-                    errorTitle = "Conflicto";
-                    errorMsg = "Ya existe una rutina con este nombre o datos duplicados.";
+                } else if (status === 403) {
+                    errorMsg = "No tienes permiso para realizar esta acción.";
                 } else {
-                    errorMsg = error.response.data.message || error.message;
+                    errorMsg = data.message || "Error interno del servidor.";
                 }
+            } else if (error.request) {
+                errorMsg = "No se pudo conectar con el servidor. Revisa tu conexión.";
             }
 
+            // ACTUALIZACIÓN DEL ESTADO: Esto es lo que abre el modal
             setFeedback({
                 isOpen: true,
                 type: 'error',

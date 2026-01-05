@@ -11,6 +11,8 @@ import Exercises from './pages/Exercises';
 import Subscriptions from './pages/Subscriptions';
 import CreateRoutine from './pages/CreateRoutine';
 import Configuration from './pages/Configuration';
+import Comidas from './pages/Comidas';
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Cargando...</div>;
@@ -73,6 +75,11 @@ function App() {
           <Route path="configuracion" element={
             <ProtectedRoute>
               <Configuration />
+            </ProtectedRoute>
+          } />
+          <Route path="comidas" element={
+            <ProtectedRoute>
+              <Comidas />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/login" />} />
