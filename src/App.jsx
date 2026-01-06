@@ -72,6 +72,11 @@ function App() {
               <CreateRoutine />
             </ProtectedRoute>
           } />
+          <Route path="/rutinas/editar/:id" element={
+            <ProtectedRoute>
+              <CreateRoutine />
+            </ProtectedRoute>
+          } />
           <Route path="configuracion" element={
             <ProtectedRoute>
               <Configuration />
