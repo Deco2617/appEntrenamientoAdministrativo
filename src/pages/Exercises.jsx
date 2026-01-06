@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { Search, Plus, Dumbbell, Youtube, Edit2, Trash2, X, Filter } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
+import FeedbackModal from '../components/FeedbackModal';
+import api from '../services/api';
 
 const Exercises = () => {
   const { user } = useAuth();
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMuscle, setFilterMuscle] = useState('Todos');
@@ -22,29 +24,25 @@ const Exercises = () => {
     video_url: '',
     description: ''
   });
+  //MODAL DE FEEDBACK
+  const [feedback, setFeedback] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
   // --- CARGA DE DATOS ---
   useEffect(() => {
     fetchExercises();
   }, []);
 
+  // Cambiamos fetch por api.get para mayor consistencia
   const fetchExercises = async () => {
     try {
-      // Agregamos headers para decirle a Laravel que queremos JSON
-      const response = await fetch('http://127.0.0.1:8000/api/exercises', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json' // <--- ESTO EVITA EL ERROR "ROUTE LOGIN NOT DEFINED"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const response = await api.get('/exercises');
+      const data = response.data;
       setExercises(Array.isArray(data) ? data : data.data || []);
-      
     } catch (error) {
       console.error("Error cargando ejercicios:", error);
     } finally {
@@ -63,7 +61,7 @@ const Exercises = () => {
   // --- FORM HANDLERS ---
   const handleSave = async (e) => {
     e.preventDefault();
-    const url = isEditing 
+    const url = isEditing
       ? `http://127.0.0.1:8000/api/exercises/${currentExercise.id}`
       : 'http://127.0.0.1:8000/api/exercises';
     const method = isEditing ? 'PUT' : 'POST';
@@ -71,9 +69,9 @@ const Exercises = () => {
     try {
       const response = await fetch(url, {
         method: method,
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(currentExercise)
       });
@@ -86,13 +84,35 @@ const Exercises = () => {
   };
 
   const handleDelete = async (id) => {
-    if(!window.confirm("¿Eliminar ejercicio?")) return;
-    try {
-       await fetch(`http://127.0.0.1:8000/api/exercises/${id}`, { method: 'DELETE' });
-       fetchExercises();
-    } catch (error) { console.error(error); }
-  };
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este ejercicio?")) return;
 
+    try {
+      // Usamos la instancia de API (Axios)
+      const response = await api.delete(`/exercises/${id}`);
+
+      setExercises(exercises.filter(ex => ex.id !== id));
+      setFeedback({
+        isOpen: true,
+        type: 'success',
+        title: '¡Eliminado!',
+        message: response.data.message || 'Ejercicio borrado correctamente.'
+      });
+
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+
+      // Ahora sí capturamos el 422 de Laravel
+      const errorMessage = error.response?.data?.message
+        || "No se pudo eliminar el ejercicio.";
+
+      setFeedback({
+        isOpen: true,
+        type: 'error',
+        title: 'Operación no permitida',
+        message: errorMessage
+      });
+    }
+  };
   const openEditModal = (ex) => {
     setCurrentExercise(ex);
     setIsEditing(true);
@@ -123,7 +143,7 @@ const Exercises = () => {
       <Sidebar />
 
       <main className="flex-1 ml-64 p-8 transition-all duration-300">
-        
+
         {/* HEADER */}
         <header className="flex justify-between items-center mb-8">
           <div>
@@ -138,20 +158,20 @@ const Exercises = () => {
         {/* TABLA */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between bg-white">
-             <div className="relative w-full sm:w-96">
-                <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                <input 
-                  type="text" placeholder="Buscar ejercicio..." value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C2185B]"
-                />
-             </div>
-             <div className="flex items-center gap-2">
-                <Filter size={16} className="text-gray-400" />
-                <select value={filterMuscle} onChange={(e) => setFilterMuscle(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700 outline-none cursor-pointer">
-                   {muscleGroups.map(group => <option key={group} value={group}>{group}</option>)}
-                </select>
-             </div>
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+              <input
+                type="text" placeholder="Buscar ejercicio..." value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C2185B]"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-gray-400" />
+              <select value={filterMuscle} onChange={(e) => setFilterMuscle(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700 outline-none cursor-pointer">
+                {muscleGroups.map(group => <option key={group} value={group}>{group}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -204,22 +224,22 @@ const Exercises = () => {
       {/* --- MODAL DE CREACIÓN / EDICIÓN --- */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all">
-          
+
           {/* CAMBIO 1: max-w-lg (ancho normal) y diseño vertical (sin flex-row) */}
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn flex flex-col max-h-[90vh]">
-            
+
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="text-lg font-bold text-gray-800">{isEditing ? 'Editar Ejercicio' : 'Nuevo Ejercicio'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
-            
+
             <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto">
               {/* 1. Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input 
+                <input
                   type="text" required value={currentExercise.name}
-                  onChange={(e) => setCurrentExercise({...currentExercise, name: e.target.value})}
+                  onChange={(e) => setCurrentExercise({ ...currentExercise, name: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
                   placeholder="Ej. Press Banca"
                 />
@@ -228,10 +248,10 @@ const Exercises = () => {
               {/* 2. Grupo Muscular */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Grupo Muscular</label>
-                <select 
-                   required value={currentExercise.muscle_group}
-                   onChange={(e) => setCurrentExercise({...currentExercise, muscle_group: e.target.value})}
-                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none bg-white"
+                <select
+                  required value={currentExercise.muscle_group}
+                  onChange={(e) => setCurrentExercise({ ...currentExercise, muscle_group: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none bg-white"
                 >
                   <option value="">Selecciona...</option>
                   <option value="Pecho">Pecho</option>
@@ -249,9 +269,9 @@ const Exercises = () => {
               {/* 3. Instrucciones */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                <textarea 
+                <textarea
                   rows="3" value={currentExercise.description || ''}
-                  onChange={(e) => setCurrentExercise({...currentExercise, description: e.target.value})}
+                  onChange={(e) => setCurrentExercise({ ...currentExercise, description: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none resize-none"
                   placeholder="Instrucciones breves..."
                 ></textarea>
@@ -261,13 +281,13 @@ const Exercises = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">URL Video (Youtube)</label>
                 <div className="relative">
-                   <Youtube className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                   <input 
-                     type="url" value={currentExercise.video_url || ''}
-                     onChange={(e) => setCurrentExercise({...currentExercise, video_url: e.target.value})}
-                     className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                     placeholder="https://youtube.com/watch?v=..."
-                   />
+                  <Youtube className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  <input
+                    type="url" value={currentExercise.video_url || ''}
+                    onChange={(e) => setCurrentExercise({ ...currentExercise, video_url: e.target.value })}
+                    className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
                 </div>
               </div>
 
@@ -275,15 +295,15 @@ const Exercises = () => {
               {currentExercise.video_url && (
                 <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-inner animate-fadeIn">
                   <div className="aspect-video w-full bg-black">
-                     <iframe 
-                        width="100%" 
-                        height="100%" 
-                        src={getEmbedUrl(currentExercise.video_url)} 
-                        title="Preview" 
-                        frameBorder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowFullScreen
-                      ></iframe>
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={getEmbedUrl(currentExercise.video_url)}
+                      title="Preview"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
                   </div>
                   <div className="p-2 text-center text-xs text-gray-500 bg-gray-100 border-t border-gray-200">
                     Vista previa del video
@@ -300,6 +320,14 @@ const Exercises = () => {
           </div>
         </div>
       )}
+      {/* --- MODAL DE FEEDBACK (Agregado al final del componente) --- */}
+      <FeedbackModal
+        isOpen={feedback.isOpen}
+        onClose={() => setFeedback({ ...feedback, isOpen: false })}
+        type={feedback.type}
+        title={feedback.title}
+        message={feedback.message}
+      />
     </div>
   );
 };
