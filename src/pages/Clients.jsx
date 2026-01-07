@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { Search, UserPlus, Users, UserCheck, Crown, Edit, MessageSquare, Phone } from 'lucide-react';
+import AddStudentModal from '../components/AddStudent';
 
 export default function Clients() {
   const navigate = useNavigate();
   // Estado para guardar la lista completa de clientes traída de la BD
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para el modal
 
   // Estados para los filtros de la interfaz
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,42 +35,48 @@ export default function Clients() {
   };
 
   // --- LÓGICA DE FILTRADO EN TIEMPO REAL ---
+  // --- 1. CORRECCIÓN DEL FILTRO ---
+  // El filtro solo debe decir "Sí" o "No" (true/false) si el cliente cumple la condición
   const filteredClients = clients.filter(client => {
-    // Unimos nombre y apellido para buscar
     const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
     const term = searchTerm.toLowerCase();
-    
-    // Verificamos si el término de búsqueda coincide con nombre o email
+
+    // Extraemos el estado real para poder filtrar
+    const lastSub = client.subscriptions && client.subscriptions.length > 0 ? client.subscriptions[0] : null;
+    const isActive = lastSub?.status === 1 || lastSub?.status === 'active';
+    const statusText = isActive ? 'Activo' : 'Inactivo';
+
     const matchesSearch = fullName.includes(term) || client.email.toLowerCase().includes(term);
-    
-    // Verificamos el filtro de estado (dropdown)
-    const matchesStatus = filterStatus === 'Todos' || client.status === filterStatus;
-    
+    const matchesStatus = filterStatus === 'Todos' || statusText === filterStatus;
+
     return matchesSearch && matchesStatus;
   });
 
   // --- CÁLCULO AUTOMÁTICO DE ESTADÍSTICAS (Tarjetas superiores) ---
+  // Debemos mirar dentro de 'subscriptions', no en 'client.status' directo
   const stats = {
     total: clients.length,
-    // Contamos cuántos tienen el estado 'Activo' (calculado en el backend)
-    active: clients.filter(c => c.status === 'Activo').length,
-    // Contamos cuántos son premium (calculado en el backend basado en el nombre del plan)
-    premium: clients.filter(c => c.is_premium).length 
+    active: clients.filter(c => {
+      const sub = c.subscriptions?.[0];
+      return sub?.status === 1 || sub?.status === 'active';
+    }).length,
+    premium: clients.filter(c => {
+      const planName = c.subscriptions?.[0]?.plan?.name || '';
+      return planName.includes('Pro') || planName.includes('Master');
+    }).length
   };
-
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Barra lateral navegable */}
       <Sidebar />
 
       <main className="flex-1 ml-64 p-8">
-        
+
         {/* ENCABEZADO con Título y Botón de Crear */}
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
-          <button 
-            // Redirige a la pantalla que creamos anteriormente
-            onClick={() => navigate('/clientes/nuevo')}
+          <button
+            onClick={() => setIsModalOpen(true)} // Abrimos el modal aquí
             className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
           >
             <UserPlus size={18} />
@@ -86,7 +94,7 @@ export default function Clients() {
               <p className="text-xs text-gray-400 mt-1">Gestión completa</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-                <Users className="text-gray-400 w-6 h-6" />
+              <Users className="text-gray-400 w-6 h-6" />
             </div>
           </div>
 
@@ -98,7 +106,7 @@ export default function Clients() {
               <p className="text-xs text-gray-400 mt-1">Con suscripción vigente</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-                <UserCheck className="text-gray-400 w-6 h-6" />
+              <UserCheck className="text-gray-400 w-6 h-6" />
             </div>
           </div>
 
@@ -110,23 +118,23 @@ export default function Clients() {
               <p className="text-xs text-gray-400 mt-1">Clientes con plan Pro/Master</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-                <Crown className="text-gray-400 w-6 h-6" />
+              <Crown className="text-gray-400 w-6 h-6" />
             </div>
           </div>
         </div>
 
         {/* CONTENEDOR PRINCIPAL: FILTROS Y TABLA */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          
+
           {/* BARRA DE HERRAMIENTAS Y FILTROS */}
           <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-end">
-            
+
             {/* Buscador de Texto */}
             <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-              <input 
-                type="text" 
-                placeholder="Buscar alumno..." 
+              <input
+                type="text"
+                placeholder="Buscar alumno..."
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B] transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -135,20 +143,20 @@ export default function Clients() {
 
             {/* Dropdowns de Filtro */}
             <div className="flex gap-4 w-full md:w-auto">
-                {/* Filtro Tipo de Plan (Visual por ahora) */}
+              {/* Filtro Tipo de Plan (Visual por ahora) */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">Tipo de Plan</label>
                 <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C2185B] bg-white cursor-pointer">
                   <option value="Todos">Todos</option>
                   <option value="Basico">Básico</option>
                   <option value="Pro">Pro</option>
-                  <option value="Master">Master</option>
+                  <option value="Master">Personalizado</option>
                 </select>
               </div>
-               {/* Filtro de Estado (Funcional) */}
+              {/* Filtro de Estado (Funcional) */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">Estado</label>
-                <select 
+                <select
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C2185B] bg-white cursor-pointer"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
@@ -164,7 +172,7 @@ export default function Clients() {
           {/* TABLA DE DATOS */}
           <div className="overflow-x-auto">
             <h3 className="px-6 py-4 text-lg font-bold text-gray-800">Listado de Clientes</h3>
-            
+
             <table className="w-full text-left border-collapse">
               {/* Encabezados de Tabla */}
               <thead>
@@ -182,53 +190,73 @@ export default function Clients() {
               {/* Cuerpo de la Tabla */}
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan="8" className="text-center p-8 text-gray-500">Cargando clientes...</td></tr>
-                ) : filteredClients.length > 0 ? (
-                  filteredClients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50 transition-colors">
-                      {/* Foto */}
-                      <td className="px-6 py-4">
-                        <img 
-                          src={client.photo !== 'default.png' ? client.photo : `https://ui-avatars.com/api/?name=${client.first_name}+${client.last_name}&background=random&color=fff&bold=true`} 
-                          alt="avatar" 
-                          className="w-10 h-10 rounded-full object-cover border border-gray-200" 
-                        />
-                      </td>
-                      {/* Nombre */}
-                      <td className="px-6 py-4 font-medium text-gray-900">
-                        {client.first_name} {client.last_name}
-                      </td>
-                      {/* Email */}
-                      <td className="px-6 py-4 text-gray-500 text-sm">{client.email}</td>
-                      {/* Teléfono (Nuevo campo) */}
-                      <td className="px-6 py-4 text-gray-500 text-sm flex items-center gap-2">
-                         <Phone size={16} className="text-gray-400"/>
-                         {client.phone || '---'}
-                      </td>
-                      {/* Plan */}
-                      <td className="px-6 py-4 text-sm text-gray-700 font-medium">{client.plan_name}</td>
-                      {/* Asistencia */}
-                      <td className="px-6 py-4 text-sm text-gray-500">{client.last_attendance}</td>
-                      {/* Estado (Etiqueta de color) */}
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold 
-                          ${client.status === 'Activo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {client.status}
-                        </span>
-                      </td>
-                      {/* Botones de Acción */}
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button className="p-2 text-gray-400 hover:text-[#C2185B] hover:bg-pink-50 rounded-lg transition" title="Editar">
-                            <Edit size={18} />
-                          </button>
-                          <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Enviar Mensaje">
-                            <MessageSquare size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  <tr><td colSpan="8" className="text-center p-8">Cargando...</td></tr>
+                ) : filteredClients.length > 0 ? (  // <--- ESTA LÍNEA ES LA QUE TE FALTABA
+                  filteredClients.map((client) => {
+
+                    // --- LÓGICA DE VISUALIZACIÓN ---
+                    const lastSubscription = client.subscriptions?.[0];
+                    const planName = lastSubscription?.plan?.name || "Sin Plan";
+                    const isActive = lastSubscription?.status === 1 || lastSubscription?.status === 'active';
+
+                    return (
+                      <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                        {/* Foto */}
+                        <td className="px-6 py-4">
+                          <img
+                            src={
+                              client.profile_photo && client.profile_photo !== 'default.png'
+                                ? `http://localhost:8000/storage/${client.profile_photo}`
+                                : `https://ui-avatars.com/api/?name=${client.first_name}+${client.last_name}&background=random&color=fff&bold=true`
+                            }
+                            alt="avatar"
+                            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                          />
+                        </td>
+                        {/* NOMBRE */}
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {client.first_name} {client.last_name}
+                        </td>
+
+                        {/* EMAIL */}
+                        <td className="px-6 py-4 text-gray-500 text-sm">{client.email}</td>
+
+                        {/* TELÉFONO */}
+                        <td className="px-6 py-4 text-gray-500 text-sm flex items-center gap-2">
+                          <Phone size={16} className="text-gray-400" />
+                          {client.phone_number || '---'}
+                        </td>
+
+                        {/* PLAN */}
+                        <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                          {planName}
+                        </td>
+
+                        {/* Asistencia */}
+                        <td className="px-6 py-4 text-sm text-gray-500">{client.last_attendance || '--/--/--'}</td>
+
+                        {/* ESTADO */}
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold 
+              ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {isActive ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+
+                        {/* BOTONES */}
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button className="p-2 text-gray-400 hover:text-[#C2185B] hover:bg-pink-50 rounded-lg transition" title="Editar">
+                              <Edit size={18} />
+                            </button>
+                            <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Enviar Mensaje">
+                              <MessageSquare size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   // Estado vacío si no hay coincidencias con el filtro
                   <tr>
@@ -243,17 +271,23 @@ export default function Clients() {
 
           {/* PAGINACIÓN (Visual, idéntica al diseño) */}
           <div className="p-4 border-t border-gray-100 flex justify-end items-center gap-2 text-sm text-gray-600">
-             <button className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1 disabled:opacity-50" disabled>
-                &lt; Anterior
-             </button>
-             <span className="px-3 py-1 bg-[#C2185B] text-white rounded-lg font-medium">1</span>
-             <button className="px-3 py-1 hover:bg-gray-100 rounded transition">2</button>
-             <button className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1">
-                 Siguiente &gt;
-             </button>
+            <button className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1 disabled:opacity-50" disabled>
+              &lt; Anterior
+            </button>
+            <span className="px-3 py-1 bg-[#C2185B] text-white rounded-lg font-medium">1</span>
+            <button className="px-3 py-1 hover:bg-gray-100 rounded transition">2</button>
+            <button className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1">
+              Siguiente &gt;
+            </button>
           </div>
-          
+
         </div>
+        {/* INTEGRACIÓN DEL MODAL */}
+        <AddStudentModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={fetchClients} // Refresca los datos automáticamente
+        />
       </main>
     </div>
   );

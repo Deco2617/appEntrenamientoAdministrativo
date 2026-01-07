@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard'; // <--- IMPORTANTE
 import Clients from './pages/Clients';
-import AddStudent from './pages/AddStudent';
 import Plans from './pages/Plans';
 import Rutinas from './pages/Rutinas';
 import Exercises from './pages/Exercises';
@@ -12,7 +11,8 @@ import Subscriptions from './pages/Subscriptions';
 import CreateRoutine from './pages/CreateRoutine';
 import Configuration from './pages/Configuration';
 import Comidas from './pages/Comidas';
-
+import Nutricion from './pages/Nutricion';
+import CreateDietPlan from './pages/CreateDietPlan';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Cargando...</div>;
@@ -41,11 +41,7 @@ function App() {
           } />
           {/* ----------------------------- */}
           {/* 2. ASEGURA QUE ESTA RUTA EXISTA Y SEA EXACTA: */}
-          <Route path="/clientes/nuevo" element={
-            <ProtectedRoute>
-              <AddStudent />
-            </ProtectedRoute>
-          } />
+          
           <Route path="/planes" element={
             <ProtectedRoute> {/* O como llames a tu protección de rutas */}
               <Plans />
@@ -77,14 +73,24 @@ function App() {
               <CreateRoutine />
             </ProtectedRoute>
           } />
-          <Route path="configuracion" element={
+          <Route path="/configuracion" element={
             <ProtectedRoute>
               <Configuration />
             </ProtectedRoute>
           } />
-          <Route path="comidas" element={
+          <Route path="/comidas" element={
             <ProtectedRoute>
               <Comidas />
+            </ProtectedRoute>
+          } />
+          <Route path="/nutricion" element={
+            <ProtectedRoute>
+              <Nutricion />
+            </ProtectedRoute>
+          } />
+          <Route path="/nutricion/nueva" element={
+            <ProtectedRoute>
+              <CreateDietPlan />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/login" />} />
