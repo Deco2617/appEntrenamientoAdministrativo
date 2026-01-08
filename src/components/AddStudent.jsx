@@ -332,12 +332,11 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
                 <select {...register("goals", {
                   required: "Selecciona el objetivo del entrenamiento."
                 })} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] appearance-none text-sm font-medium text-gray-700">
-                  <option value="">-- Seleccionar Objetivo --</option>
-                  <option value="lose_weight">Perder Peso</option>
-                  <option value="gain_muscle">Ganar Masa Muscular</option>
-                  <option value="strength">Aumentar Fuerza</option>
-                  <option value="lose_weight">Resistencia / Cardio</option>
-                  <option value="gain_muscle">Mantenimiento/Salud General</option>
+                  <option value="Perder Peso">Perder Peso</option>
+                  <option value="Ganar Masa Muscular">Ganar Masa Muscular</option>
+                  <option value="Aumentar Fuerza">Aumentar Fuerza</option>
+                  <option value="Resistencia / Cardio">Resistencia / Cardio</option>
+                  <option value="Mantenimiento/Salud General">Mantenimiento/Salud General</option>
                 </select>
                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
 

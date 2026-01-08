@@ -3,28 +3,27 @@ import Sidebar from '../components/Sidebar';
 import axios from 'axios';
 import {
   Search, Plus, X, ChevronDown, ChevronRight,
-  Flame, Save, Calendar, ArrowLeft, Check
+  Flame, Save, ArrowLeft, Copy, CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CreateDietPlan = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
 
-  // Datos del Plan General
+  // Datos del Plan
   const [planMeta, setPlanMeta] = useState({ name: '', goal: 'Perder Peso', description: '' });
 
-  // Estado de Alimentos (Biblioteca)
+  // Biblioteca Alimentos
   const [foods, setFoods] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState({}); // { 'Fruta': [food1, food2], ... }
-  const [expandedCategory, setExpandedCategory] = useState(null); // Para el acordeón
+  const [categories, setCategories] = useState({});
+  const [expandedCategory, setExpandedCategory] = useState(null);
 
-  // Estado del Constructor del Plan (Estructura Semanal)
+  // Constructor Semanal
   const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const [activeDay, setActiveDay] = useState('monday');
 
-  // Estructura inicial: Un objeto con claves por día, y dentro array de comidas
+  // Estructura Base
   const initialDayState = [
     { type: 'breakfast', label: 'Desayuno', time: '08:00', foods: [] },
     { type: 'lunch', label: 'Almuerzo', time: '13:00', foods: [] },
@@ -32,11 +31,12 @@ const CreateDietPlan = () => {
     { type: 'dinner', label: 'Cena', time: '20:00', foods: [] }
   ];
 
+  // Estado principal del plan
   const [weekPlan, setWeekPlan] = useState(
     daysOfWeek.reduce((acc, day) => ({ ...acc, [day]: JSON.parse(JSON.stringify(initialDayState)) }), {})
   );
 
-  // Modal de Agregar Alimento
+  // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFoodToAdd, setSelectedFoodToAdd] = useState(null);
   const [addFormData, setAddFormData] = useState({ quantity: '100', unit: 'g', targetMeal: 'breakfast' });
@@ -53,7 +53,6 @@ const CreateDietPlan = () => {
       });
       setFoods(res.data);
       groupFoodsByCategory(res.data);
-      setLoading(false);
     } catch (error) {
       console.error("Error al cargar alimentos", error);
     }
@@ -67,17 +66,16 @@ const CreateDietPlan = () => {
       return acc;
     }, {});
     setCategories(groups);
-    // Abrir la primera categoría por defecto
     if (Object.keys(groups).length > 0) setExpandedCategory(Object.keys(groups)[0]);
   };
-
   // --- LÓGICA DE AGREGAR ---
   const handleFoodClick = (food) => {
     setSelectedFoodToAdd(food);
     setAddFormData({ ...addFormData, quantity: '100' }); // Reset cantidad
     setModalOpen(true);
   };
-
+  // --- SOLUCIÓN BUG DOBLE AGREGADO ---
+  // Usamos map para crear nuevos arrays en lugar de push (mutación)
   const confirmAddFood = () => {
     if (!selectedFoodToAdd) return;
 
@@ -91,12 +89,19 @@ const CreateDietPlan = () => {
     };
 
     setWeekPlan(prev => {
-      const currentDayMeals = [...prev[activeDay]];
-      const mealIndex = currentDayMeals.findIndex(m => m.type === addFormData.targetMeal);
+      // 1. Copiamos el array de comidas del día actual
+      const currentDayMeals = prev[activeDay].map(meal => {
+        // 2. Si es la comida objetivo (ej: Desayuno), retornamos una copia con el nuevo alimento
+        if (meal.type === addFormData.targetMeal) {
+          return {
+            ...meal,
+            foods: [...meal.foods, newFoodItem] // Spread operator evita duplicados por StrictMode
+          };
+        }
+        // 3. Si no, retornamos la comida tal cual
+        return meal;
+      });
 
-      if (mealIndex !== -1) {
-        currentDayMeals[mealIndex].foods.push(newFoodItem);
-      }
       return { ...prev, [activeDay]: currentDayMeals };
     });
 
@@ -105,14 +110,31 @@ const CreateDietPlan = () => {
 
   const removeFood = (mealType, foodIndex) => {
     setWeekPlan(prev => {
-      const currentDayMeals = [...prev[activeDay]];
-      const mealIndex = currentDayMeals.findIndex(m => m.type === mealType);
-      currentDayMeals[mealIndex].foods.splice(foodIndex, 1);
+      const currentDayMeals = prev[activeDay].map(meal => {
+        if (meal.type === mealType) {
+          const updatedFoods = [...meal.foods];
+          updatedFoods.splice(foodIndex, 1);
+          return { ...meal, foods: updatedFoods };
+        }
+        return meal;
+      });
       return { ...prev, [activeDay]: currentDayMeals };
     });
   };
 
-  // --- CÁLCULOS ---
+  // --- SOLUCIÓN AL "FASTIDIO": COPIAR DÍA ---
+  const copyDayToAllWeek = () => {
+    if (!confirm(`¿Quieres copiar el menú del ${activeDay} a TODOS los días de la semana? Esto sobrescribirá lo que tengas en otros días.`)) return;
+
+    const dayToClone = weekPlan[activeDay];
+    const newWeek = {};
+    daysOfWeek.forEach(day => {
+      // Deep copy para evitar referencias cruzadas
+      newWeek[day] = JSON.parse(JSON.stringify(dayToClone));
+    });
+    setWeekPlan(newWeek);
+  };
+
   const calculateDailyCalories = () => {
     let total = 0;
     weekPlan[activeDay].forEach(meal => {
@@ -128,7 +150,7 @@ const CreateDietPlan = () => {
       name: planMeta.name,
       goal: planMeta.goal,
       description: planMeta.description,
-      days: weekPlan // Enviamos la estructura completa
+      days: weekPlan
     };
 
     try {
@@ -144,7 +166,6 @@ const CreateDietPlan = () => {
     }
   };
 
-  // Filtrado de la lista izquierda
   const filteredCategories = Object.keys(categories).reduce((acc, cat) => {
     const filteredItems = categories[cat].filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (filteredItems.length > 0) acc[cat] = filteredItems;
@@ -156,56 +177,71 @@ const CreateDietPlan = () => {
       <Sidebar />
 
       <main className="flex-1 ml-64 p-6 overflow-hidden h-screen flex flex-col">
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-6 shrink-0">
+
+        {/* --- NUEVA CABECERA MÁS LIMPIA (SOLUCIÓN DISEÑO FRÍO) --- */}
+        <header className="flex justify-between items-start mb-6 shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/nutricion')} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+            <button onClick={() => navigate('/nutricion')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition">
               <ArrowLeft size={20} />
             </button>
             <div>
               <input
                 type="text"
-                placeholder="Nombre del Plan (Ej: Keto Principiante)"
-                className="text-xl font-bold bg-transparent border-none outline-none placeholder-gray-300 w-96 focus:ring-0 p-0"
+                placeholder="Nombre del Plan (Ej: Hipertrofia Avanzada)"
+                className="text-xl font-bold text-gray-800 placeholder-gray-300 border-none outline-none focus:ring-0 p-0 w-96 bg-transparent"
                 value={planMeta.name}
                 onChange={e => setPlanMeta({ ...planMeta, name: e.target.value })}
               />
-              <div className="flex gap-2 text-xs mt-1">
+              <div className="flex items-center gap-2 mt-1">
                 <select
-                  className="bg-transparent text-gray-500 border-none p-0 focus:ring-0 cursor-pointer font-medium"
+                  className="text-xs font-bold text-[#C2185B] bg-pink-50 border-none rounded py-1 pl-2 pr-6 cursor-pointer focus:ring-0"
                   value={planMeta.goal}
                   onChange={e => setPlanMeta({ ...planMeta, goal: e.target.value })}
                 >
-                  <option value="lose_weight">Perder Peso</option>
-                  <option value="gain_muscle">Ganar Masa Muscular</option>
-                  <option value="strength">Aumentar Fuerza</option>
-                  <option value="lose_weight">Resistencia / Cardio</option>
-                  <option value="gain_muscle">Mantenimiento/Salud General</option>
+                  <option>Perder Peso</option>
+                  <option>Ganar Masa Muscular</option>
+                  <option>Aumentar Fuerza</option>
+                  <option>Resistencia / Cardio</option>
+                  <option>Mantenimiento/Salud General</option>
                 </select>
+                <span className="text-xs text-gray-400">|</span>
+                <span className="text-xs text-gray-400">Duración sugerida: 1 semana (cíclica)</span>
               </div>
             </div>
           </div>
-          <button
-            onClick={handleSavePlan}
-            className="bg-[#C2185B] text-white px-6 py-2 rounded-lg flex items-center gap-2 font-bold shadow-md hover:bg-[#A0134D] transition"
-          >
-            <Save size={18} /> Guardar Plan
-          </button>
-        </div>
 
-        {/* CONTENIDO PRINCIPAL - GRID DE 2 COLUMNAS */}
+          <div className="flex items-center gap-4">
+            {/* Card de Calorías */}
+            <div className="flex flex-col items-end mr-4">
+              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Calorías Diarias ({activeDay})</span>
+              <div className="flex items-center gap-2">
+                <Flame className="text-orange-500" size={18} fill="currentColor" />
+                <span className="text-2xl font-bold text-gray-800">{calculateDailyCalories()}</span>
+                <span className="text-sm text-gray-400 font-medium">/ 2200</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSavePlan}
+              className="bg-[#C2185B] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-pink-100 hover:bg-[#A0134D] transition transform hover:-translate-y-0.5"
+            >
+              <Save size={18} /> Guardar Plan
+            </button>
+          </div>
+        </header>
+
+        {/* CONTENIDO PRINCIPAL */}
         <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
 
-          {/* --- COLUMNA IZQUIERDA: BIBLIOTECA (Scrollable) --- */}
+          {/* COLUMNA IZQUIERDA: BIBLIOTECA */}
           <div className="col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-50 shrink-0">
-              <h3 className="font-bold text-gray-700 mb-3">Alimentos Disponibles</h3>
+            <div className="p-4 border-b border-gray-50 bg-gray-50/50">
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Buscar alimentos..."
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-[#C2185B]"
+                  placeholder="Buscar ingredientes..."
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#C2185B] transition"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                 />
@@ -217,28 +253,28 @@ const CreateDietPlan = () => {
                 <div key={cat} className="mb-2">
                   <button
                     onClick={() => setExpandedCategory(expandedCategory === cat ? null : cat)}
-                    className="w-full flex justify-between items-center p-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg"
+                    className="w-full flex justify-between items-center p-3 text-sm font-bold text-gray-600 hover:bg-pink-50 rounded-lg transition"
                   >
                     <span>{cat}</span>
                     {expandedCategory === cat ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
 
                   {expandedCategory === cat && (
-                    <div className="pl-2 pr-1 mt-1 space-y-1">
+                    <div className="pl-2 mt-1 space-y-1">
                       {filteredCategories[cat].map(food => (
                         <div
                           key={food.id}
                           onClick={() => handleFoodClick(food)}
-                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-pink-50 cursor-pointer group border border-transparent hover:border-pink-100 transition"
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 cursor-pointer group transition-all"
                         >
-                          <img src={food.image_url} alt="" className="w-8 h-8 rounded object-cover bg-gray-100" />
+                          <img src={food.image_url} alt="" className="w-9 h-9 rounded-lg object-cover bg-gray-100" />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold text-gray-700 truncate group-hover:text-[#C2185B]">{food.name}</p>
                             <p className="text-[10px] text-gray-400">{food.calories_per_100g} kcal</p>
                           </div>
-                          <button className="p-1 rounded bg-white shadow-sm opacity-0 group-hover:opacity-100 text-[#C2185B]">
+                          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-[#C2185B] group-hover:text-white transition">
                             <Plus size={12} />
-                          </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -248,77 +284,77 @@ const CreateDietPlan = () => {
             </div>
           </div>
 
-          {/* --- COLUMNA DERECHA: CONSTRUCTOR (Lienzo) --- */}
-          <div className="col-span-9 flex flex-col overflow-hidden">
+          {/* COLUMNA DERECHA: LIENZO DE PLANIFICACIÓN */}
+          <div className="col-span-9 flex flex-col overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100">
 
-            {/* Barra Superior del Lienzo: Calorías y Días */}
-            <div className="bg-[#880E4F] rounded-t-2xl p-4 text-white shadow-md shrink-0 flex justify-between items-center">
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-[10px] uppercase font-bold opacity-80">Calorías Totales</p>
-                  <p className="text-2xl font-bold">{calculateDailyCalories()} <span className="text-sm font-normal opacity-70">/ 2200 kcal</span></p>
-                </div>
-                <div className="h-10 w-px bg-white/20"></div>
-                {/* Selector de Días Simplificado */}
-                <div className="flex gap-1 items-center">
-                  {daysOfWeek.map(day => (
-                    <button
-                      key={day}
-                      onClick={() => setActiveDay(day)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition ${activeDay === day ? 'bg-white text-[#880E4F]' : 'bg-white/10 hover:bg-white/20'}`}
-                      title={day}
-                    >
-                      {day.charAt(0).toUpperCase()}
-                    </button>
-                  ))}
-                </div>
+            {/* Barra de Herramientas del Lienzo */}
+            <div className="border-b border-gray-100 p-4 flex justify-between items-center bg-gray-50/30">
+              {/* Selector de Días */}
+              <div className="flex gap-2">
+                {daysOfWeek.map(day => (
+                  <button
+                    key={day}
+                    onClick={() => setActiveDay(day)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${activeDay === day
+                      ? 'bg-gray-900 text-white shadow-md'
+                      : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'
+                      }`}
+                  >
+                    {day === 'wednesday' ? 'Mier' : day.substring(0, 3)}
+                  </button>
+                ))}
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold capitalize">{activeDay}</p>
-                <p className="text-[10px] opacity-70">Editando menú diario</p>
-              </div>
+
+              {/* Botón Mágico: Clonar Día */}
+              <button
+                onClick={copyDayToAllWeek}
+                className="flex items-center gap-2 text-xs font-bold text-[#C2185B] bg-pink-50 px-3 py-2 rounded-lg hover:bg-pink-100 transition"
+                title="Copiar las comidas de hoy a todos los días de la semana"
+              >
+                <Copy size={14} /> Copiar {activeDay} a toda la semana
+              </button>
             </div>
 
-            {/* Área de Comidas (Scrollable) */}
-            <div className="flex-1 bg-white rounded-b-2xl shadow-sm border border-gray-200 border-t-0 overflow-y-auto p-6 custom-scrollbar">
+            {/* Grid de Comidas */}
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]">
               <div className="grid grid-cols-2 gap-6">
                 {weekPlan[activeDay].map((meal, index) => (
-                  <div key={meal.type} className="border border-gray-100 rounded-xl p-4 hover:border-pink-100 transition shadow-sm">
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-50">
-                      <h4 className="font-bold text-gray-800 flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${index % 2 === 0 ? 'bg-[#C2185B]' : 'bg-purple-600'}`}></span>
+                  <div key={meal.type} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow group">
+
+                    {/* Cabecera de la Comida */}
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-bold text-gray-800 flex items-center gap-2 text-sm">
+                        <span className={`w-2 h-2 rounded-full ${['bg-yellow-400', 'bg-orange-500', 'bg-purple-500', 'bg-blue-500'][index]}`}></span>
                         {meal.label}
                       </h4>
-                      <button
-                        onClick={() => {
-                          setAddFormData(prev => ({ ...prev, targetMeal: meal.type }));
-                          // Aquí podrías enfocar el buscador o abrir un modal directo
-                          document.querySelector('input[placeholder="Buscar alimentos..."]').focus();
-                        }}
-                        className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-bold transition"
-                      >
-                        + Añadir
-                      </button>
+                      <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">
+                        {meal.time}
+                      </span>
                     </div>
 
-                    <div className="space-y-2 min-h-[100px]">
+                    {/* Lista de Alimentos Agregados */}
+                    <div className="space-y-2 min-h-[120px]">
                       {meal.foods.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-300 text-xs italic py-4">
-                          No hay alimentos
+                        <div className="h-full border-2 border-dashed border-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-300 text-xs gap-2 py-4">
+                          <Plus size={16} className="opacity-50" />
+                          <span>Arrastra o selecciona alimentos</span>
                         </div>
                       ) : (
                         meal.foods.map((food, fIndex) => (
-                          <div key={fIndex} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg group">
+                          <div key={fIndex} className="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg group/item hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100 transition">
                             <div className="flex items-center gap-3">
-                              <img src={food.image_url} className="w-8 h-8 rounded bg-white object-cover" />
+                              <img src={food.image_url} className="w-10 h-10 rounded-lg bg-white object-cover border border-gray-100" />
                               <div>
                                 <p className="text-xs font-bold text-gray-700">{food.name}</p>
-                                <p className="text-[10px] text-gray-500">{food.quantity} • {food.calculatedCalories} kcal</p>
+                                <div className="flex gap-2 text-[10px] text-gray-400 font-medium">
+                                  <span>{food.quantity}</span>
+                                  <span className="text-orange-400">{food.calculatedCalories} kcal</span>
+                                </div>
                               </div>
                             </div>
                             <button
                               onClick={() => removeFood(meal.type, fIndex)}
-                              className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                              className="text-gray-300 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition"
                             >
                               <X size={14} />
                             </button>
@@ -327,12 +363,15 @@ const CreateDietPlan = () => {
                       )}
                     </div>
 
-                    {/* Totales de la comida */}
-                    <div className="mt-3 pt-2 border-t border-gray-50 flex justify-end">
-                      <span className="text-[10px] font-bold text-gray-400">
-                        Total: {meal.foods.reduce((acc, f) => acc + f.calculatedCalories, 0)} kcal
-                      </span>
-                    </div>
+                    {/* Footer de Totales */}
+                    {meal.foods.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-gray-50 flex justify-end items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">Total Bloque</span>
+                        <span className="text-sm font-bold text-gray-800">
+                          {meal.foods.reduce((acc, f) => acc + f.calculatedCalories, 0)} kcal
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -341,66 +380,70 @@ const CreateDietPlan = () => {
           </div>
         </div>
 
-        {/* --- MODAL PARA AGREGAR CANTIDAD --- */}
+        {/* --- MODAL PARA CONFIRMAR ALIMENTO --- */}
         {modalOpen && selectedFoodToAdd && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden scale-100 transform transition-all">
-              <div className="p-4 bg-[#C2185B] text-white flex justify-between items-center">
-                <h3 className="font-bold text-sm flex items-center gap-2">
-                  <Plus size={16} /> Agregar al Plan
-                </h3>
-                <button onClick={() => setModalOpen(false)} className="hover:bg-white/20 p-1 rounded"><X size={16} /></button>
+          <div className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Añadir Alimento</h3>
+                  <p className="text-xs text-gray-500">Configura la porción para este plan</p>
+                </div>
+                <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
               </div>
 
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-6">
-                  <img src={selectedFoodToAdd.image_url} className="w-16 h-16 rounded-lg object-cover bg-gray-100 border" />
-                  <div>
-                    <p className="font-bold text-gray-800 text-lg">{selectedFoodToAdd.name}</p>
-                    <p className="text-xs text-gray-500">{selectedFoodToAdd.calories_per_100g} kcal / 100g</p>
+              <div className="flex items-center gap-4 mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <img src={selectedFoodToAdd.image_url} className="w-14 h-14 rounded-lg object-cover" />
+                <div>
+                  <p className="font-bold text-gray-800">{selectedFoodToAdd.name}</p>
+                  <p className="text-xs text-gray-500 font-medium">{selectedFoodToAdd.calories_per_100g} kcal <span className="text-gray-300">/</span> 100g</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 mb-1.5 block">Selecciona la Comida</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['breakfast', 'lunch', 'snack', 'dinner'].map(m => (
+                      <button
+                        key={m}
+                        onClick={() => setAddFormData({ ...addFormData, targetMeal: m })}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition ${addFormData.targetMeal === m
+                          ? 'border-[#C2185B] bg-pink-50 text-[#C2185B]'
+                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          }`}
+                      >
+                        {m === 'breakfast' ? 'Desayuno' : m === 'lunch' ? 'Almuerzo' : m === 'snack' ? 'Snack' : 'Cena'}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Comida</label>
-                    <select
-                      className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-pink-500"
-                      value={addFormData.targetMeal}
-                      onChange={e => setAddFormData({ ...addFormData, targetMeal: e.target.value })}
-                    >
-                      <option value="breakfast">Desayuno</option>
-                      <option value="lunch">Almuerzo</option>
-                      <option value="snack">Snack</option>
-                      <option value="dinner">Cena</option>
-                    </select>
+                    <label className="text-xs font-bold text-gray-700 mb-1.5 block">Cantidad</label>
+                    <input
+                      type="number"
+                      className="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-pink-100 font-bold text-center"
+                      value={addFormData.quantity}
+                      onChange={e => setAddFormData({ ...addFormData, quantity: e.target.value })}
+                    />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Cantidad</label>
-                      <input
-                        type="number"
-                        className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-pink-500"
-                        value={addFormData.quantity}
-                        onChange={e => setAddFormData({ ...addFormData, quantity: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Unidad</label>
-                      <select className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-gray-50" disabled>
-                        <option>gramos (g)</option>
-                      </select>
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 mb-1.5 block">Unidad</label>
+                    <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 font-medium text-center">
+                      Gramos (g)
                     </div>
                   </div>
                 </div>
-
-                <button
-                  onClick={confirmAddFood}
-                  className="w-full mt-6 bg-[#C2185B] text-white py-3 rounded-lg font-bold shadow-lg shadow-pink-200 hover:bg-[#A0134D] transition"
-                >
-                  Agregar
-                </button>
               </div>
+
+              <button
+                onClick={confirmAddFood}
+                className="w-full mt-8 bg-[#C2185B] text-white py-3.5 rounded-xl font-bold hover:bg-[#A0134D] transition shadow-lg shadow-pink-100 flex justify-center items-center gap-2"
+              >
+                <CheckCircle2 size={18} /> Confirmar y Añadir
+              </button>
             </div>
           </div>
         )}

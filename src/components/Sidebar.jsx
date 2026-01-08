@@ -25,9 +25,10 @@ export default function Sidebar() {
     <div className="w-64 bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0">
       {/* LOGO */}
       <div className="p-6 flex items-center gap-2">
-        <div className="bg-gradient-to-r from-[#C2185B] to-purple-600 w-8 h-8 rounded-full flex items-center justify-center">
-          <span className="text-white font-bold text-lg">G</span>
-        </div>
+        <img 
+        src="/CM LOGO.png" 
+        alt="Logo"
+        className='w-10 h-9 object-contain' />
         <span className="text-xl font-bold text-[#C2185B]">appEntrenamiento</span>
       </div>
 

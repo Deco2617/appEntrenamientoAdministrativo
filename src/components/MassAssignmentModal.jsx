@@ -10,12 +10,11 @@ const MassAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback }) => {
     const [loading, setLoading] = useState(false);
 
     const goalOptions = [
-        "Bajar de peso",
-        "Ganar masa muscular",
-        "Mejorar resistencia cardio",
-        "Aumentar fuerza",
-        "Mantenimiento físico",
-        "Flexibilidad y Movilidad"
+        "Perder Peso",
+        "Ganar Masa Muscular",
+        "Aumentar Fuerza",
+        "Resistencia / Cardio",
+        "Mantenimiento/Salud General"
     ];
 
     useEffect(() => {
