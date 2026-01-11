@@ -218,25 +218,46 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             {/* Password */}
-            <div className="relative">
+            <div className="w-full">
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Contraseña</label>
+
+              {/* 1. WRAPPER RELATIVO: Solo Input + Botón */}
               <div className="relative">
                 <input
                   onKeyDown={blockSpace}
                   type={showPassword ? 'text' : 'password'}
-                  {
-                  ...register("password", {
+                  {...register("password", {
                     required: "Contraseña obligatoria"
                   })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] text-sm"
-                  placeholder="••••••" />
-                {errors.password && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{errors.password.message}</p>}
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  placeholder="••••••"
+                />
+
+                {/* ¡AQUÍ BORRÉ EL ERROR QUE SOBRABA! */}
+
+                <button type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  )}
                 </button>
               </div>
-            </div>
 
+              {/* 2. ERROR: Aquí afuera es donde debe estar */}
+              {errors.password && (
+                <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
             {/* Fecha Nacimiento */}
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fecha de Nacimiento</label>
@@ -252,17 +273,18 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
 
             {/* Género */}
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Género</label>
+              <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Género</label>
               <select
                 {...register("gender",
                   {
-                    required: "Campo obligatorio"
+                    required: "Campo obligatorio",
                   })}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none bg-white text-sm">
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] appearance-none text-sm font-medium text-gray-700">
                 <option value="">Seleccionar...</option>
                 <option value="M">Masculino</option>
                 <option value="F">Femenino</option>
               </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
               {errors.gender && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{errors.gender.message}</p>}
 
             </div>
@@ -273,12 +295,47 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Peso (kg)</label>
                 <input
                   type="number"
-                  step="0.1"
+                  step="0.01"
                   onKeyDown={blockInvalidNumberChars}
-                  placeholder="00.0"
+                  placeholder="00.00"
+                  // --- LÓGICA DE VALIDACIÓN VISUAL ---
+                  onInput={(e) => {
+                    const value = e.target.value;
+
+                    // Si el usuario escribe un punto...
+                    if (value.includes('.')) {
+                      const parts = value.split('.'); // Separamos en [enteros, decimales]
+
+                      // 1. Validar Enteros (índice 0): Máximo 3 caracteres
+                      if (parts[0].length > 3) {
+                        parts[0] = parts[0].slice(0, 3);
+                      }
+
+                      // 2. Validar Decimales (índice 1): Máximo 2 caracteres
+                      if (parts[1].length > 2) {
+                        parts[1] = parts[1].slice(0, 2);
+                      }
+
+                      // Reconstruimos el valor
+                      e.target.value = parts.join('.');
+
+                    } else {
+                      // Si NO hay punto, solo validamos que los enteros no pasen de 3
+                      if (value.length > 3) {
+                        e.target.value = value.slice(0, 3);
+                      }
+                    }
+                  }}
+
                   {...register("weight", {
                     required: "Requerido",
-                    min: { value: 1, message: "Mínimo 1" }
+                    min: { value: 40.0, message: "El peso mínimo para registrar es de 40.0 Kg" },
+                    max: { value: 150, message: "El peso máximo para registrar es de 150.0 Kg" },
+                    // Agregamos un patrón Regex como seguridad extra para el formulario
+                    pattern: {
+                      value: /^\d{1,3}(\.\d{1,2})?$/,
+                      message: "Formato inválido (Ej: 123.45)"
+                    }
                   })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] text-sm text-center"
                 />
@@ -290,9 +347,15 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
                   type="number"
                   onKeyDown={blockInvalidNumberCharsPoint}
                   placeholder="000"
+                  // 2. NUEVO: Limitamos a 5 caracteres (ej: 120.5) dinámicamente
+                  onInput={(e) => {
+                    if (e.target.value.length > 3) e.target.value = e.target.value.slice(0, 3);
+                  }}
                   {...register("height", {
                     required: "Requerido",
-                    min: { value: 1, message: "Mínimo 1" }
+                    min: { value: 140, message: "La altura mínima para registrar es de 140 cm" },
+                    max: { value: 210, message: "La altura máxima para registrar es de 210 cm" },
+
                   })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] text-sm text-center"
                 />
@@ -310,7 +373,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
                   ...register("plan_id", {
                     required: "Selecciona el plan de suscripción."
                   })} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] appearance-none text-sm font-medium text-gray-700">
-                  <option value="">-- Selecciona un Plan Vigente --</option>
+                  <option value="">Selecciona un Plan Vigente</option>
                   {plans.map(plan => (
                     <option key={plan.id} value={plan.id}>
                       {plan.name} — S/. {plan.price} ({plan.duration_days} días)

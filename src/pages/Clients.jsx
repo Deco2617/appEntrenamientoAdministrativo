@@ -6,7 +6,6 @@ import { Search, UserPlus, Users, UserCheck, Crown, Edit, MessageSquare, Phone }
 import AddStudentModal from '../components/AddStudent';
 
 export default function Clients() {
-  const navigate = useNavigate();
   // Estado para guardar la lista completa de clientes traída de la BD
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,16 +14,70 @@ export default function Clients() {
   // Estados para los filtros de la interfaz
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
-  // Puedes agregar un estado para 'filterPlan' si deseas implementar ese filtro también
+  const [filterPlan, setFilterPlan] = useState('Todos');
+  // Estados para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(7);
+
+  // -----------------------------------------------------------------------
+  // 1. PRIMERO: LÓGICA DE FILTRADO (ESTO TIENE QUE IR ANTES DE LA PAGINACIÓN)
+  // -----------------------------------------------------------------------
+  const filteredClients = clients.filter(client => {
+    const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
+    const term = searchTerm.toLowerCase();
+
+    // Extraemos el estado real
+    const lastSub = client.subscriptions && client.subscriptions.length > 0 ? client.subscriptions[0] : null;
+    const isActive = lastSub?.status === 1 || lastSub?.status === 'active';
+    const statusText = isActive ? 'Activo' : 'Inactivo';
+    const planName = (lastSub?.plan?.name || '').toLowerCase();
+    const matchesSearch = fullName.includes(term) || client.email.toLowerCase().includes(term);
+    const matchesStatus = filterStatus === 'Todos' || statusText === filterStatus;
+
+    // 3. NUEVO: Lógica del Filtro de Plan
+    let matchesPlan = true;
+    if (filterPlan !== 'Todos') {
+      if (filterPlan === 'Basico') {
+        // Buscamos "basico" o "básico" (con tilde)
+        matchesPlan = planName.includes('basico') || planName.includes('básico');
+      } else if (filterPlan === 'Pro') {
+        matchesPlan = planName.includes('pro');
+      } else if (filterPlan === 'Master') {
+        matchesPlan = planName.includes('master') || planName.includes('personalizado');
+      }
+    }
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // -----------------------------------------------------------------------
+  // 2. SEGUNDO: LÓGICA DE PAGINACIÓN (AHORA SÍ FUNCIONA PORQUE YA EXISTE filteredClients)
+  // -----------------------------------------------------------------------
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  // Estos son los clientes que REALMENTE se van a pintar
+  const currentClients = filteredClients.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // -----------------------------------------------------------------------
+  // 3. EFECTOS (CARGA DE DATOS Y RESETEO)
+  // -----------------------------------------------------------------------
 
   // Al cargar la página, traemos los datos
   useEffect(() => {
     fetchClients();
   }, []);
 
+  // IMPORTANTE: Si buscas algo o cambias el filtro, vuelve a la página 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
   const fetchClients = async () => {
     try {
-      // Llamamos al endpoint que mejoramos en el paso anterior
       const response = await api.get('/trainer/my-students');
       setClients(response.data);
     } catch (error) {
@@ -34,26 +87,7 @@ export default function Clients() {
     }
   };
 
-  // --- LÓGICA DE FILTRADO EN TIEMPO REAL ---
-  // --- 1. CORRECCIÓN DEL FILTRO ---
-  // El filtro solo debe decir "Sí" o "No" (true/false) si el cliente cumple la condición
-  const filteredClients = clients.filter(client => {
-    const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
-    const term = searchTerm.toLowerCase();
-
-    // Extraemos el estado real para poder filtrar
-    const lastSub = client.subscriptions && client.subscriptions.length > 0 ? client.subscriptions[0] : null;
-    const isActive = lastSub?.status === 1 || lastSub?.status === 'active';
-    const statusText = isActive ? 'Activo' : 'Inactivo';
-
-    const matchesSearch = fullName.includes(term) || client.email.toLowerCase().includes(term);
-    const matchesStatus = filterStatus === 'Todos' || statusText === filterStatus;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // --- CÁLCULO AUTOMÁTICO DE ESTADÍSTICAS (Tarjetas superiores) ---
-  // Debemos mirar dentro de 'subscriptions', no en 'client.status' directo
+  // --- CÁLCULO ESTADÍSTICAS ---
   const stats = {
     total: clients.length,
     active: clients.filter(c => {
@@ -143,14 +177,18 @@ export default function Clients() {
 
             {/* Dropdowns de Filtro */}
             <div className="flex gap-4 w-full md:w-auto">
-              {/* Filtro Tipo de Plan (Visual por ahora) */}
+              {/* FILTRO DE PLAN CORREGIDO */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">Tipo de Plan</label>
-                <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C2185B] bg-white cursor-pointer">
+                <select
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C2185B] bg-white cursor-pointer"
+                  value={filterPlan}
+                  onChange={(e) => setFilterPlan(e.target.value)}
+                >
                   <option value="Todos">Todos</option>
-                  <option value="Basico">Básico</option>
-                  <option value="Pro">Pro</option>
-                  <option value="Master">Personalizado</option>
+                  <option value="Basico">Plan Básico</option>
+                  <option value="Pro">Plan Pro</option>
+                  <option value="Master">Plan Personalizado</option>
                 </select>
               </div>
               {/* Filtro de Estado (Funcional) */}
@@ -191,8 +229,8 @@ export default function Clients() {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr><td colSpan="8" className="text-center p-8">Cargando...</td></tr>
-                ) : filteredClients.length > 0 ? (  // <--- ESTA LÍNEA ES LA QUE TE FALTABA
-                  filteredClients.map((client) => {
+                ) : currentClients.length > 0 ? (  // <--- ESTA LÍNEA ES LA QUE TE FALTABA
+                  currentClients.map((client) => {
 
                     // --- LÓGICA DE VISUALIZACIÓN ---
                     const lastSubscription = client.subscriptions?.[0];
@@ -269,16 +307,43 @@ export default function Clients() {
             </table>
           </div>
 
-          {/* PAGINACIÓN (Visual, idéntica al diseño) */}
-          <div className="p-4 border-t border-gray-100 flex justify-end items-center gap-2 text-sm text-gray-600">
-            <button className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1 disabled:opacity-50" disabled>
-              &lt; Anterior
-            </button>
-            <span className="px-3 py-1 bg-[#C2185B] text-white rounded-lg font-medium">1</span>
-            <button className="px-3 py-1 hover:bg-gray-100 rounded transition">2</button>
-            <button className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1">
-              Siguiente &gt;
-            </button>
+          {/* PAGINACIÓN FUNCIONAL */}
+          <div className="p-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-600">
+            <span className="text-gray-400">
+              Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, filteredClients.length)} de {filteredClients.length} resultados
+            </span>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                &lt; Anterior
+              </button>
+
+              {/* Generamos los números de página dinámicamente */}
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => paginate(index + 1)}
+                  className={`px-3 py-1 rounded transition ${currentPage === index + 1
+                    ? 'bg-[#C2185B] text-white font-medium'
+                    : 'hover:bg-gray-100'
+                    }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="hover:bg-gray-100 px-3 py-1 rounded transition flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente &gt;
+              </button>
+            </div>
           </div>
 
         </div>

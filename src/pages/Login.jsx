@@ -108,7 +108,7 @@ export default function Login() {
 
           {/* Footer del login (Opcional) */}
           <p className="text-center mt-8 text-sm text-gray-500">
-            ¿No tienes acceso? <span className="text-[#C2185B] font-bold cursor-pointer hover:underline">Contacta a tu entrenador</span>
+            ¿No tienes acceso? <span className="text-[#C2185B] font-bold cursor-pointer hover:underline">Contacta al administrador</span>
           </p>
         </div>
       </div>
