@@ -148,7 +148,7 @@ const Exercises = () => {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Ejercicios</h1>
-            <p className="text-sm text-gray-500">Catálogo de movimientos</p>
+            <p className="text-sm text-gray-500">Catálogo de ejercicios</p>
           </div>
           <button onClick={openCreateModal} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors">
             <Plus size={18} /> Nuevo Ejercicio
@@ -223,14 +223,36 @@ const Exercises = () => {
 
       {/* --- MODAL DE CREACIÓN / EDICIÓN --- */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all">
 
           {/* CAMBIO 1: max-w-lg (ancho normal) y diseño vertical (sin flex-row) */}
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn flex flex-col max-h-[90vh]">
 
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-800">{isEditing ? 'Editar Ejercicio' : 'Nuevo Ejercicio'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            {/* HEADER ROSA CON ÍCONO AJUSTADO */}
+            <div className="bg-[#C2185B] px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                {/* ÍCONO MÁS GRANDE */}
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Dumbbell size={32} className="text-white" />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-white leading-none">
+                    {isEditing ? 'Editar Ejercicio' : 'Registrar Nuevo Ejercicio'}
+                  </h3>
+                  {/* AQUÍ ESTÁ EL SUBTÍTULO QUE PUEDES CAMBIAR */}
+                  <p className="text-pink-100 text-xs font-medium uppercase tracking-wider mt-1">
+                    FICHA DE EJERCICIOS
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
             </div>
 
             <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto">

@@ -13,6 +13,9 @@ import Configuration from './pages/Configuration';
 import Comidas from './pages/Comidas';
 import Nutricion from './pages/Nutricion';
 import CreateDietPlan from './pages/CreateDietPlan';
+import Reports from './pages/Reports';
+import ExpiringReport from './pages/reportes/ExpiringReport';
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Cargando...</div>;
@@ -91,6 +94,16 @@ function App() {
           <Route path="/nutricion/nueva" element={
             <ProtectedRoute>
               <CreateDietPlan />
+            </ProtectedRoute>
+          } />
+          <Route path="/reports" element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          } />
+          <Route path="/reports/expiring" element={
+            <ProtectedRoute>
+              <ExpiringReport />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/login" />} />

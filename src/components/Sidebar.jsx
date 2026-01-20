@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Dumbbell, Apple, Settings, LogOut, ClipboardList, Activity, Utensils } from 'lucide-react';
+import { Home, FileChartPie, Calendar, LayoutDashboard, Users, CreditCard, Dumbbell, Apple, Settings, LogOut, ClipboardList, Activity, Utensils } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar() {
@@ -16,19 +16,23 @@ export default function Sidebar() {
     { name: 'Rutinas', icon: Dumbbell, path: '/rutinas' },
     { name: 'Comidas', icon: Utensils, path: '/comidas' },
     { name: 'Nutrición', icon: Apple, path: '/nutricion' },
+    { name: 'Reportes', icon: FileChartPie, path: '/reports' },
     { name: 'Configuración', icon: Settings, path: '/configuracion' },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/dashboard') return location.pathname === path;
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <div className="w-64 bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0">
       {/* LOGO */}
       <div className="p-6 flex items-center gap-2">
-        <img 
-        src="/CM LOGO.png" 
-        alt="Logo"
-        className='w-10 h-9 object-contain' />
+        <img
+          src="/CM LOGO.png"
+          alt="Logo"
+          className='w-10 h-9 object-contain' />
         <span className="text-xl font-bold text-[#C2185B]">appEntrenamiento</span>
       </div>
 

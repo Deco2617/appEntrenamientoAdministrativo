@@ -93,11 +93,14 @@ const Rutinas = () => {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
-      <main className="flex-1 ml-64 p-6 flex flex-col h-full">
+      <main className="flex-1 ml-64 p-8 flex flex-col h-full">
         {/* HEADER */}
-        <header className="flex justify-between items-center mb-4 shrink-0">
-          <h1 className="text-2xl font-bold text-gray-800">Rutinas</h1>
-          <button onClick={() => navigate('/rutinas/nueva')} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium text-sm shadow-sm">
+        <header className="flex justify-between items-center mb-8 shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Rutinas</h1>
+            <p className="text-sm text-gray-500">Panel de Administración</p>
+          </div>
+          <button onClick={() => navigate('/rutinas/nueva')} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors">
             <Plus size={16} /> Crear Rutina
           </button>
         </header>

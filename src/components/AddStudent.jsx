@@ -115,7 +115,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto">
 
         {/* Cabecera Uniforme */}
-        <div className="px-8 py-5 bg-[#C2185B] flex justify-between items-center text-white">
+        <div className="px-6 py-4 bg-[#C2185B] flex justify-between items-center text-white">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-white/20 rounded-lg">
               <UserPlus size={24} />
@@ -274,19 +274,20 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
             {/* Género */}
             <div>
               <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Género</label>
-              <select
-                {...register("gender",
-                  {
-                    required: "Campo obligatorio",
-                  })}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] appearance-none text-sm font-medium text-gray-700">
-                <option value="">Seleccionar...</option>
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+              <div className="relative">
+                <select
+                  {...register("gender",
+                    {
+                      required: "Campo obligatorio",
+                    })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] appearance-none text-sm font-medium text-gray-700">
+                  <option value="">Seleccionar...</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+              </div>
               {errors.gender && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{errors.gender.message}</p>}
-
             </div>
 
             {/* Peso y Altura */}
@@ -412,7 +413,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-gray-240 bg-gray-50">
+        <div className="p-6 border-t border-gray-240 bg-gray-50">
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={loading}

@@ -87,7 +87,7 @@ const MassAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback }) => {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden  animate-in fade-in zoom-in duration-200">
 
                 {/* Header con Color Principal */}
-                <div className="p-6 bg-[#C2185B] flex justify-between items-center text-white">
+                <div className="px-6 py-4 bg-[#C2185B] flex justify-between items-center text-white">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-lg">
                             <Users size={24} />

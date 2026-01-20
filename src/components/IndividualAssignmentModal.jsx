@@ -15,7 +15,7 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
             const fetchClients = async () => {
                 try {
                     // Endpoint para obtener alumnos con plan personalizado
-                    const response = await api.get('/clients?plan_type=Personalizado'); 
+                    const response = await api.get('/clients?plan_type=Personalizado');
                     const data = response.data.data || response.data;
                     setAllClients(Array.isArray(data) ? data : []);
                 } catch (error) {
@@ -28,15 +28,15 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
 
     if (!isOpen) return null;
 
-    const filteredClients = allClients.filter(client => 
+    const filteredClients = allClients.filter(client =>
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const toggleClient = (clientId) => {
-        setSelectedClients(prev => 
-            prev.includes(clientId) 
-                ? prev.filter(id => id !== clientId) 
+        setSelectedClients(prev =>
+            prev.includes(clientId)
+                ? prev.filter(id => id !== clientId)
                 : [...prev, clientId]
         );
     };
@@ -70,9 +70,9 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-gray-800">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-                
+
                 {/* Header con Color Principal #C2185B */}
-                <div className="p-6 bg-[#C2185B] flex justify-between items-center text-white">
+                <div className="px-6 py-4 bg-[#C2185B] flex justify-between items-center text-white">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-lg">
                             <UserCheck size={24} />
@@ -91,7 +91,7 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
                     {/* Buscador */}
                     <div className="relative">
                         <Search className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                        <input 
+                        <input
                             type="text"
                             placeholder="Buscar por nombre, email u objetivo..."
                             value={searchTerm}
@@ -107,7 +107,7 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
                         </p>
                         <div className="border border-gray-100 rounded-xl max-h-52 overflow-y-auto custom-scrollbar bg-gray-50/30">
                             {filteredClients.map(client => (
-                                <div 
+                                <div
                                     key={client.id}
                                     onClick={() => toggleClient(client.id)}
                                     className={`flex items-center justify-between p-4 cursor-pointer transition-colors border-b border-gray-100 last:border-0 hover:bg-white ${selectedClients.includes(client.id) ? 'bg-pink-50/30' : ''}`}
@@ -137,7 +137,7 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
                             <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase">
                                 <Calendar size={14} className="text-[#C2185B]" /> Fecha de Inicio
                             </label>
-                            <input 
+                            <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
@@ -148,7 +148,7 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
                             <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase">
                                 <Calendar size={14} className="text-gray-400" /> Fecha Fin (Opc)
                             </label>
-                            <input 
+                            <input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
@@ -173,12 +173,11 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
                     <button onClick={onClose} className="flex-1 py-3 text-gray-600 font-semibold hover:bg-gray-100 rounded-xl transition-all">
                         Cancelar
                     </button>
-                    <button 
+                    <button
                         onClick={handleAssign}
                         disabled={loading || selectedClients.length === 0}
-                        className={`flex-1 py-3 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all ${
-                            loading || selectedClients.length === 0 ? 'bg-gray-300' : 'bg-[#C2185B] hover:bg-[#ad1457] active:scale-95'
-                        }`}
+                        className={`flex-1 py-3 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all ${loading || selectedClients.length === 0 ? 'bg-gray-300' : 'bg-[#C2185B] hover:bg-[#ad1457] active:scale-95'
+                            }`}
                     >
                         {loading ? 'Asignando...' : 'Asignar Rutina'}
                     </button>

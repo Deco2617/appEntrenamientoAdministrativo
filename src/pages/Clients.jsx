@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
-import { Search, UserPlus, Users, UserCheck, Crown, Edit, MessageSquare, Phone } from 'lucide-react';
+import { Search, UserPlus, Users, UserCheck, Crown, Edit, MessageSquare, Phone, Bell } from 'lucide-react';
 import AddStudentModal from '../components/AddStudent';
 
 export default function Clients() {
@@ -15,6 +15,7 @@ export default function Clients() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   const [filterPlan, setFilterPlan] = useState('Todos');
+  const [filterExpiring, setFilterExpiring] = useState('Todos'); // Filtro por vencer
   // Estados para paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(7);
@@ -31,23 +32,44 @@ export default function Clients() {
     const isActive = lastSub?.status === 1 || lastSub?.status === 'active';
     const statusText = isActive ? 'Activo' : 'Inactivo';
     const planName = (lastSub?.plan?.name || '').toLowerCase();
+    const planType = (lastSub?.plan?.type || '').toLowerCase();
     const matchesSearch = fullName.includes(term) || client.email.toLowerCase().includes(term);
     const matchesStatus = filterStatus === 'Todos' || statusText === filterStatus;
 
     // 3. NUEVO: Lógica del Filtro de Plan
     let matchesPlan = true;
     if (filterPlan !== 'Todos') {
-      if (filterPlan === 'Basico') {
-        // Buscamos "basico" o "básico" (con tilde)
-        matchesPlan = planName.includes('basico') || planName.includes('básico');
+      if (filterPlan === 'Basic') {
+        matchesPlan = planName.includes('Básico') || planName.includes('basico') || planName.includes('básico') || planType.includes('basic');
       } else if (filterPlan === 'Pro') {
-        matchesPlan = planName.includes('pro');
-      } else if (filterPlan === 'Master') {
-        matchesPlan = planName.includes('master') || planName.includes('personalizado');
+        matchesPlan = planName.includes('pro') || planName.includes('Pro') || planType.includes('pro');
+      } else if (filterPlan === 'Personalized') {
+        matchesPlan = planName.includes('personalizado') || planName.includes('Personalizado') || planType.includes('personalized');
       }
     }
 
-    return matchesSearch && matchesStatus;
+    // 4. NUEVO: Lógica del Filtro "Próximos a Vencer" (7 días)
+    let matchesExpiring = true;
+    if (filterExpiring === 'expiring') {
+      if (lastSub) {
+        const endDate = lastSub.end_date ? new Date(lastSub.end_date) : null;
+        if (endDate) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Normalizar a inicio del día
+          const diffTime = endDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          // Mostrar clientes cuyo plan vence en los próximos 7 días (y que aún no hayan vencido)
+          matchesExpiring = diffDays >= 0 && diffDays <= 7;
+        } else {
+          matchesExpiring = false; // Si no tiene fecha de fin, no coincide
+        }
+      } else {
+        matchesExpiring = false; // Sin suscripción no aplica
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesPlan && matchesExpiring;
   });
 
   // -----------------------------------------------------------------------
@@ -74,7 +96,7 @@ export default function Clients() {
   // IMPORTANTE: Si buscas algo o cambias el filtro, vuelve a la página 1
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, filterPlan, filterExpiring]);
 
   const fetchClients = async () => {
     try {
@@ -108,10 +130,13 @@ export default function Clients() {
 
         {/* ENCABEZADO con Título y Botón de Crear */}
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
+            <p className="text-sm text-gray-500">Panel de Administración</p>
+          </div>
           <button
             onClick={() => setIsModalOpen(true)} // Abrimos el modal aquí
-            className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
+            className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
           >
             <UserPlus size={18} />
             Registrar Nuevo Alumno
@@ -149,7 +174,7 @@ export default function Clients() {
             <div>
               <p className="text-gray-500 text-sm font-medium">Planes Premium</p>
               <h3 className="text-3xl font-bold text-gray-800 mt-2">{stats.premium}</h3>
-              <p className="text-xs text-gray-400 mt-1">Clientes con plan Pro/Master</p>
+              <p className="text-xs text-gray-400 mt-1">Clientes con plan Pro</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
               <Crown className="text-gray-400 w-6 h-6" />
@@ -176,7 +201,32 @@ export default function Clients() {
             </div>
 
             {/* Dropdowns de Filtro */}
-            <div className="flex gap-4 w-full md:w-auto">
+            <div className="flex gap-4 w-full md:w-auto items-end">
+              {/* BOTÓN AVISAR A CLIENTES - Solo aparece cuando hay clientes por vencer */}
+              {filterExpiring === 'expiring' && filteredClients.length > 0 && (
+                <button
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm text-sm"
+                  onClick={() => {
+                    // Aquí irá la lógica para avisar a los clientes
+                    alert(`Se enviará notificación a ${filteredClients.length} cliente(s)`);
+                  }}
+                >
+                  <Bell size={16} />
+                  Avisar a clientes
+                </button>
+              )}
+              {/* FILTRO POR VENCER */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-600">Por Vencer</label>
+                <select
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C2185B] bg-white cursor-pointer"
+                  value={filterExpiring}
+                  onChange={(e) => setFilterExpiring(e.target.value)}
+                >
+                  <option value="Todos">Todos</option>
+                  <option value="expiring">Próximos a vencer</option>
+                </select>
+              </div>
               {/* FILTRO DE PLAN CORREGIDO */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">Tipo de Plan</label>
@@ -186,9 +236,9 @@ export default function Clients() {
                   onChange={(e) => setFilterPlan(e.target.value)}
                 >
                   <option value="Todos">Todos</option>
-                  <option value="Basico">Plan Básico</option>
+                  <option value="Basic">Plan Básico</option>
                   <option value="Pro">Plan Pro</option>
-                  <option value="Master">Plan Personalizado</option>
+                  <option value="Personalized">Plan Personalizado</option>
                 </select>
               </div>
               {/* Filtro de Estado (Funcional) */}
