@@ -14,7 +14,10 @@ import Comidas from './pages/Comidas';
 import Nutricion from './pages/Nutricion';
 import CreateDietPlan from './pages/CreateDietPlan';
 import Reports from './pages/Reports';
-import ExpiringReport from './pages/reportes/ExpiringReport';
+import ExpiringReport from './pages/reports/ExpiringReport';
+import IncomeReport from './pages/reports/IncomeReport';
+import RetentionReport from './pages/reports/RetentionReport';
+import GoalsReport from './pages/reports/GoalsReport';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -44,7 +47,7 @@ function App() {
           } />
           {/* ----------------------------- */}
           {/* 2. ASEGURA QUE ESTA RUTA EXISTA Y SEA EXACTA: */}
-          
+
           <Route path="/planes" element={
             <ProtectedRoute> {/* O como llames a tu protección de rutas */}
               <Plans />
@@ -104,6 +107,21 @@ function App() {
           <Route path="/reports/expiring" element={
             <ProtectedRoute>
               <ExpiringReport />
+            </ProtectedRoute>
+          } />
+          <Route path="/reports/income" element={
+            <ProtectedRoute>
+              <IncomeReport />
+            </ProtectedRoute>
+          } />
+          <Route path="/reports/retention" element={
+            <ProtectedRoute>
+              <RetentionReport />
+            </ProtectedRoute>
+          } />
+          <Route path="/reports/goals" element={
+            <ProtectedRoute>
+              <GoalsReport />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/login" />} />

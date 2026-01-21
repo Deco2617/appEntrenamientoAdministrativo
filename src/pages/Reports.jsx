@@ -1,30 +1,44 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { Clock, DollarSign, TrendingUp, Users, ChevronRight } from 'lucide-react';
+import { Clock, DollarSign, Users, Target, ChevronRight, TrendingUp } from 'lucide-react';
 
 export default function Reports() {
   const navigate = useNavigate();
 
-  // Configuración de las tarjetas
   const reportCards = [
     {
       title: "Próximos Vencimientos",
       description: "Alumnos con planes por vencer en los próximos 7 días.",
       icon: <Clock className="w-8 h-8 text-orange-500" />,
-      path: "/reports/expiring", // Esta ruta lleva al reporte detallado
+      path: "/reports/expiring",
       color: "bg-orange-50 border-orange-100 hover:border-orange-300",
       textColor: "text-orange-700"
     },
     {
       title: "Reporte de Ingresos",
-      description: "Próximamente: Desglose de ganancias mensuales.",
+      description: "Análisis financiero y distribución por tipo de plan.",
       icon: <DollarSign className="w-8 h-8 text-green-500" />,
-      path: "#", // Aún no creado
+      path: "/reports/income", // <--- NUEVA RUTA
       color: "bg-green-50 border-green-100 hover:border-green-300",
       textColor: "text-green-700"
     },
-    // Puedes agregar más tarjetas aquí...
+    {
+      title: "Retención de Clientes",
+      description: "Comparativa de clientes Activos vs. Inactivos.",
+      icon: <Users className="w-8 h-8 text-blue-500" />,
+      path: "/reports/retention", // <--- NUEVA RUTA
+      color: "bg-blue-50 border-blue-100 hover:border-blue-300",
+      textColor: "text-blue-700"
+    },
+    {
+      title: "Objetivos de Alumnos",
+      description: "Distribución demográfica según metas (Bajar peso, etc).",
+      icon: <Target className="w-8 h-8 text-purple-500" />,
+      path: "/reports/goals", // <--- NUEVA RUTA
+      color: "bg-purple-50 border-purple-100 hover:border-purple-300",
+      textColor: "text-purple-700"
+    }
   ];
 
   return (
@@ -36,12 +50,11 @@ export default function Reports() {
           <p className="text-gray-500 text-sm mt-1">Selecciona una categoría para ver estadísticas detalladas.</p>
         </header>
 
-        {/* GRID DE TARJETAS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {reportCards.map((card, index) => (
             <div 
               key={index}
-              onClick={() => card.path !== '#' && navigate(card.path)}
+              onClick={() => navigate(card.path)}
               className={`p-6 rounded-2xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex items-center justify-between group ${card.color} bg-white`}
             >
               <div className="flex items-start gap-5">
@@ -57,7 +70,6 @@ export default function Reports() {
                   </p>
                 </div>
               </div>
-              
               <ChevronRight className="text-gray-400 group-hover:translate-x-1 transition-transform" />
             </div>
           ))}
