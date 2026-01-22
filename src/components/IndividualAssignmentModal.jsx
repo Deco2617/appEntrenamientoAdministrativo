@@ -45,24 +45,39 @@ const IndividualAssignmentModal = ({ isOpen, onClose, routine, onShowFeedback })
         if (selectedClients.length === 0) return;
         setLoading(true);
         try {
-            await api.post('/assignments/individual-routine', {
-                routine_id: routine.id,
-                client_ids: selectedClients,
-                assigned_date: startDate,
-                end_date: endDate || null
-            });
+            // Asignar a cada cliente seleccionado
+            let successCount = 0;
+            let errorCount = 0;
 
-            onShowFeedback({
-                type: 'success',
-                title: '¡Asignación Exitosa!',
-                message: `Rutina asignada correctamente a ${selectedClients.length} alumno(s).`
-            });
+            for (const clientId of selectedClients) {
+                try {
+                    await api.post('/assignments/individual-routine', {
+                        routine_id: routine.id,
+                        user_id: clientId,
+                        assigned_date: startDate,
+                    });
+                    successCount++;
+                } catch (err) {
+                    console.error(`Error asignando a cliente ${clientId}:`, err);
+                    errorCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                onShowFeedback({
+                    type: 'success',
+                    title: '¡Asignación Exitosa!',
+                    message: `Rutina asignada correctamente a ${successCount} alumno(s).${errorCount > 0 ? ` (${errorCount} fallidos)` : ''}`
+                });
+            } else {
+                throw new Error('No se pudo asignar a ningún alumno');
+            }
             onClose();
         } catch (error) {
             onShowFeedback({
                 type: 'error',
                 title: 'Error de Asignación',
-                message: error.response?.data?.message || "Error al procesar."
+                message: error.response?.data?.message || error.message || "Error al procesar."
             });
         } finally { setLoading(false); }
     };

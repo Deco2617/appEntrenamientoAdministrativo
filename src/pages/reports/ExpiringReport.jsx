@@ -87,7 +87,9 @@ export default function ExpiringReport() {
                                         <tr key={client.id} className="hover:bg-orange-50 transition-colors">
                                             <td className="px-6 py-4 font-medium text-gray-800 flex items-center gap-3">
                                                 <img
-                                                    src={client.profile_photo ? `http://localhost:8000/storage/${client.profile_photo}` : `https://ui-avatars.com/api/?name=${client.first_name}`}
+                                                    src={client.profile_photo && client.profile_photo !== 'default.png'
+                                                        ? `http://localhost:8000/storage/${client.profile_photo}`
+                                                        : `https://ui-avatars.com/api/?name=${client.first_name}+${client.last_name}&background=random&color=fff&bold=true`}
                                                     className="w-8 h-8 rounded-full bg-gray-200 object-cover"
                                                     alt="avatar"
                                                 />
@@ -97,7 +99,7 @@ export default function ExpiringReport() {
                                                 {sub.plan?.name || 'Sin nombre'}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-bold text-orange-600">
-                                                {sub.end_date}
+                                                {endDate.toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' })}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold">

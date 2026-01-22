@@ -94,7 +94,7 @@ export default function IncomeReport() {
         <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-8 text-center">
           <p className="text-gray-500 font-medium uppercase tracking-widest text-sm">Ingreso Mensual Recurrente</p>
           <h2 className="text-6xl font-extrabold text-[#C2185B] mt-4">
-            ${totalIncome.toLocaleString()}
+            S/.{totalIncome.toLocaleString()}
           </h2>
           <p className="text-gray-400 text-xs mt-2">Basado en {chartData.length} tipos de planes activos</p>
         </div>
@@ -118,14 +118,14 @@ export default function IncomeReport() {
                   tickLine={false} 
                 />
                 <YAxis 
-                  tickFormatter={(value) => `$${value}`} 
+                  tickFormatter={(value) => `S/.${value}`} 
                   axisLine={false} 
                   tickLine={false}
                   tick={{fill: '#999', fontSize: 12}} 
                 />
                 <Tooltip 
                   cursor={{fill: '#f3f4f6'}}
-                  formatter={(value) => [`$${value}`, 'Ingresos']}
+                  formatter={(value) => [`S/.${value}`, 'Ingresos']}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={60} animationDuration={1500}>

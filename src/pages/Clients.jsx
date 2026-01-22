@@ -205,14 +205,31 @@ export default function Clients() {
               {/* BOTÓN AVISAR A CLIENTES - Solo aparece cuando hay clientes por vencer */}
               {filterExpiring === 'expiring' && filteredClients.length > 0 && (
                 <button
-                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm text-sm"
-                  onClick={() => {
-                    // Aquí irá la lógica para avisar a los clientes
-                    alert(`Se enviará notificación a ${filteredClients.length} cliente(s)`);
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={async () => {
+                    // Obtener IDs de los clientes filtrados
+                    const clientIds = filteredClients.map(c => c.id);
+
+                    if (!confirm(`¿Enviar alerta por WhatsApp a ${clientIds.length} cliente(s)?`)) {
+                      return;
+                    }
+
+                    try {
+                      const response = await api.post('/notifications/expiring-alert', {
+                        client_ids: clientIds
+                      });
+
+                      const { results } = response.data;
+                      alert(`✅ Alertas enviadas: ${results.sent} de ${results.total}\n❌ Fallidos: ${results.failed}`);
+                    } catch (error) {
+                      console.error("Error enviando alertas:", error);
+                      const message = error.response?.data?.message || "Error al enviar las alertas";
+                      alert(`❌ ${message}`);
+                    }
                   }}
                 >
                   <Bell size={16} />
-                  Avisar a clientes
+                  Avisar a clientes ({filteredClients.length})
                 </button>
               )}
               {/* FILTRO POR VENCER */}

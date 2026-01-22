@@ -38,12 +38,21 @@ const Configuration = () => {
             });
             const userData = response.data;
 
+            // Construir URL de la foto de perfil
+            let photoUrl = null;
+            if (userData.profile_photo && userData.profile_photo !== 'default.png') {
+                photoUrl = `http://127.0.0.1:8000/storage/${userData.profile_photo}`;
+            } else if (userData.first_name) {
+                // Usar UI Avatars como fallback
+                photoUrl = `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=random&color=fff&bold=true`;
+            }
+
             // Restablecemos TODO el estado
             setProfile({
                 first_name: userData.first_name,
                 last_name: userData.last_name,
                 email: userData.email,
-                photo_url: userData.profile_photo_url,
+                photo_url: photoUrl,
                 photo_file: null // <--- ¡IMPORTANTE! Esto borra cualquier foto pendiente de subir
             });
 
