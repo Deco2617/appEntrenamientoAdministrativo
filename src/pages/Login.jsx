@@ -16,7 +16,17 @@ export default function Login() {
     setLoginError('');
     const result = await login(data.email, data.password);
     if (result.success) {
-      navigate('/dashboard');
+      // Verificar el rol del usuario después del login
+      const savedUser = JSON.parse(localStorage.getItem('user'));
+      if (savedUser && savedUser.role === 'client') {
+        // Si es cliente, mostrar mensaje y cerrar sesión
+        setLoginError('Este panel es exclusivo para entrenadores. Si eres cliente, por favor usa la aplicación móvil.');
+        // Limpiar la sesión
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       setLoginError('Credenciales incorrectas. Intenta de nuevo.');
     }
@@ -26,10 +36,10 @@ export default function Login() {
   return (
     // 1. Fondo general gris suave para contraste
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      
+
       {/* 2. Tarjeta contenedora con sombra y bordes redondeados */}
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        
+
         {/* Decoración superior (línea de color) */}
         <div className="h-2 bg-[#C2185B]"></div>
 
@@ -37,12 +47,12 @@ export default function Login() {
           {/* ENCABEZADO */}
           <div className="text-center mb-8">
             {/* Logo Real */}
-            <img 
-              src="/CM LOGO.png" 
-              alt="Logo App" 
-              className="w-24 h-24 mx-auto mb-2 object-contain" 
+            <img
+              src="/CM LOGO.png"
+              alt="Logo App"
+              className="w-24 h-24 mx-auto mb-2 object-contain"
             />
-            
+
             <h1 className="text-2xl font-bold text-[#C2185B]">appEntrenamiento</h1>
             <h2 className="text-lg font-medium text-gray-600 mt-1">¡Bienvenido de nuevo!</h2>
             <p className="text-gray-400 text-sm">Tu compañero de entrenamiento personal.</p>
@@ -50,7 +60,7 @@ export default function Login() {
 
           {/* FORMULARIO */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            
+
             {/* Email con Icono */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
@@ -58,7 +68,7 @@ export default function Login() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="text-gray-400" size={18} />
                 </div>
-                <input 
+                <input
                   type="email"
                   {...register("email", { required: true })}
                   className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B] transition-all text-sm text-gray-700 placeholder-gray-400"
@@ -80,7 +90,7 @@ export default function Login() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="text-gray-400" size={18} />
                 </div>
-                <input 
+                <input
                   type="password"
                   {...register("password", { required: true })}
                   className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B] transition-all text-sm text-gray-700 placeholder-gray-400"
@@ -97,8 +107,8 @@ export default function Login() {
             )}
 
             {/* Botón Principal */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSubmitting}
               className="w-full bg-[#C2185B] hover:bg-[#ad1457] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >

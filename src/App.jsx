@@ -19,10 +19,17 @@ import IncomeReport from './pages/reports/IncomeReport';
 import RetentionReport from './pages/reports/RetentionReport';
 import GoalsReport from './pages/reports/GoalsReport';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles = ['admin', 'trainer'] }) => {
   const { user, loading } = useAuth();
+
   if (loading) return <div>Cargando...</div>;
   if (!user) return <Navigate to="/login" />;
+
+  // Verificar si el rol del usuario está en la lista de roles permitidos
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/login" />;
+  }
+
   return children;
 };
 

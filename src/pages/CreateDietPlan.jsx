@@ -41,6 +41,11 @@ const CreateDietPlan = () => {
   const [selectedFoodToAdd, setSelectedFoodToAdd] = useState(null);
   const [addFormData, setAddFormData] = useState({ quantity: '100', unit: 'g', targetMeal: 'breakfast' });
 
+  // Drag & Drop
+  const [draggedFood, setDraggedFood] = useState(null);
+  const [dragOverMeal, setDragOverMeal] = useState(null);
+  const [isDropMode, setIsDropMode] = useState(false); // true cuando el modal se abre por drop
+
   useEffect(() => {
     fetchFoods();
   }, []);
@@ -72,7 +77,48 @@ const CreateDietPlan = () => {
   const handleFoodClick = (food) => {
     setSelectedFoodToAdd(food);
     setAddFormData({ ...addFormData, quantity: '100' }); // Reset cantidad
+    setIsDropMode(false); // Modo click: mostrar selector de comida
     setModalOpen(true);
+  };
+
+  // --- DRAG & DROP HANDLERS ---
+  const handleDragStart = (e, food) => {
+    setDraggedFood(food);
+    e.dataTransfer.effectAllowed = 'move';
+    // Añadir clase visual al elemento arrastrado
+    e.target.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e) => {
+    setDraggedFood(null);
+    setDragOverMeal(null);
+    e.target.style.opacity = '1';
+  };
+
+  const handleDragOver = (e, mealType) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverMeal(mealType);
+  };
+
+  const handleDragLeave = (e) => {
+    // Solo limpiar si realmente salimos del contenedor
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverMeal(null);
+    }
+  };
+
+  const handleDrop = (e, mealType) => {
+    e.preventDefault();
+    setDragOverMeal(null);
+
+    if (draggedFood) {
+      setSelectedFoodToAdd(draggedFood);
+      setAddFormData({ quantity: '100', unit: 'g', targetMeal: mealType });
+      setIsDropMode(true); // Modo drop: ocultar selector de comida
+      setModalOpen(true);
+      setDraggedFood(null);
+    }
   };
   // --- SOLUCIÓN BUG DOBLE AGREGADO ---
   // Usamos map para crear nuevos arrays en lugar de push (mutación)
@@ -264,15 +310,18 @@ const CreateDietPlan = () => {
                       {filteredCategories[cat].map(food => (
                         <div
                           key={food.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, food)}
+                          onDragEnd={handleDragEnd}
                           onClick={() => handleFoodClick(food)}
-                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 cursor-pointer group transition-all"
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 cursor-grab active:cursor-grabbing group transition-all"
                         >
-                          <img src={food.image_url} alt="" className="w-9 h-9 rounded-lg object-cover bg-gray-100" />
-                          <div className="flex-1 min-w-0">
+                          <img src={food.image_url} alt="" className="w-9 h-9 rounded-lg object-cover bg-gray-100 pointer-events-none" />
+                          <div className="flex-1 min-w-0 pointer-events-none">
                             <p className="text-xs font-bold text-gray-700 truncate group-hover:text-[#C2185B]">{food.name}</p>
                             <p className="text-[10px] text-gray-400">{food.calories_per_100g} kcal</p>
                           </div>
-                          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-[#C2185B] group-hover:text-white transition">
+                          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-[#C2185B] group-hover:text-white transition pointer-events-none">
                             <Plus size={12} />
                           </div>
                         </div>
@@ -319,7 +368,16 @@ const CreateDietPlan = () => {
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]">
               <div className="grid grid-cols-2 gap-6">
                 {weekPlan[activeDay].map((meal, index) => (
-                  <div key={meal.type} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow group">
+                  <div
+                    key={meal.type}
+                    onDragOver={(e) => handleDragOver(e, meal.type)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, meal.type)}
+                    className={`bg-white border rounded-xl p-5 shadow-sm hover:shadow-md transition-all group ${dragOverMeal === meal.type
+                        ? 'border-[#C2185B] ring-2 ring-[#C2185B] ring-opacity-30 bg-pink-50/30'
+                        : 'border-gray-100'
+                      }`}
+                  >
 
                     {/* Cabecera de la Comida */}
                     <div className="flex justify-between items-center mb-4">
@@ -335,9 +393,12 @@ const CreateDietPlan = () => {
                     {/* Lista de Alimentos Agregados */}
                     <div className="space-y-2 min-h-[120px]">
                       {meal.foods.length === 0 ? (
-                        <div className="h-full border-2 border-dashed border-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-300 text-xs gap-2 py-4">
-                          <Plus size={16} className="opacity-50" />
-                          <span>Arrastra o selecciona alimentos</span>
+                        <div className={`h-full border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-xs gap-2 py-4 transition-colors ${dragOverMeal === meal.type
+                            ? 'border-[#C2185B] text-[#C2185B] bg-pink-50/50'
+                            : 'border-gray-100 text-gray-300'
+                          }`}>
+                          <Plus size={16} className={dragOverMeal === meal.type ? 'opacity-100' : 'opacity-50'} />
+                          <span>{dragOverMeal === meal.type ? '¡Suelta aquí!' : 'Arrastra o selecciona alimentos'}</span>
                         </div>
                       ) : (
                         meal.foods.map((food, fIndex) => (
@@ -401,23 +462,35 @@ const CreateDietPlan = () => {
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 mb-1.5 block">Selecciona la Comida</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['breakfast', 'lunch', 'snack', 'dinner'].map(m => (
-                      <button
-                        key={m}
-                        onClick={() => setAddFormData({ ...addFormData, targetMeal: m })}
-                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition ${addFormData.targetMeal === m
-                          ? 'border-[#C2185B] bg-pink-50 text-[#C2185B]'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
-                      >
-                        {m === 'breakfast' ? 'Desayuno' : m === 'lunch' ? 'Almuerzo' : m === 'snack' ? 'Snack' : 'Cena'}
-                      </button>
-                    ))}
+                {/* Solo mostrar selector de comida si NO es modo drop */}
+                {!isDropMode ? (
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 mb-1.5 block">Selecciona la Comida</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['breakfast', 'lunch', 'snack', 'dinner'].map(m => (
+                        <button
+                          key={m}
+                          onClick={() => setAddFormData({ ...addFormData, targetMeal: m })}
+                          className={`py-2 px-3 rounded-lg text-xs font-bold border transition ${addFormData.targetMeal === m
+                            ? 'border-[#C2185B] bg-pink-50 text-[#C2185B]'
+                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                            }`}
+                        >
+                          {m === 'breakfast' ? 'Desayuno' : m === 'lunch' ? 'Almuerzo' : m === 'snack' ? 'Snack' : 'Cena'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-pink-50 border border-pink-100 rounded-xl p-3 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#C2185B]"></div>
+                    <span className="text-sm font-bold text-[#C2185B]">
+                      {addFormData.targetMeal === 'breakfast' ? 'Desayuno' :
+                        addFormData.targetMeal === 'lunch' ? 'Almuerzo' :
+                          addFormData.targetMeal === 'snack' ? 'Snack' : 'Cena'}
+                    </span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
