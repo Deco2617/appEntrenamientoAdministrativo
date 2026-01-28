@@ -1,6 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import PageTransition from './components/PageTransition';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard'; // <--- IMPORTANTE
 import Clients from './pages/Clients';
@@ -30,7 +31,7 @@ const ProtectedRoute = ({ children, allowedRoles = ['admin', 'trainer'] }) => {
     return <Navigate to="/login" />;
   }
 
-  return children;
+  return <PageTransition>{children}</PageTransition>;
 };
 
 function App() {

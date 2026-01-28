@@ -1,3 +1,122 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities;  
+@tailwind utilities;
+
+/* ========== ESTILOS BASE ========== */
+
+/* Evita el salto de layout cuando aparece/desaparece el scrollbar */
+html {
+    overflow-y: scroll;
+}
+
+/* ========== MICRO-ANIMACIONES GLOBALES ========== */
+
+/* Efecto lift para las tarjetas stat-card */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Botón primario con efecto scale y ripple */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Efecto ripple para botones */
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn-primary:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* Botones de acción pequeños (iconos) */
+.btn-icon {
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-icon:hover {
+    transform: scale(1.1);
+}
+
+.btn-icon:active {
+    transform: scale(0.95);
+}
+
+/* Filas de tabla con efecto suave */
+.table-row {
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.table-row:hover {
+    background-color: #f9fafb;
+}
+
+/* Contenedor de tabla con lift sutil */
+.table-container {
+    transition: box-shadow 0.2s ease;
+}
+
+.table-container:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Animación de fade-in reutilizable */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+/* Animación de pulse para badges de estado */
+@keyframes pulse-subtle {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.pulse-attention {
+    animation: pulse-subtle 2s ease-in-out infinite;
+}

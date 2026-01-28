@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { Search, UserPlus, Users, UserCheck, Crown, Edit, MessageSquare, Phone, Bell } from 'lucide-react';
 import AddStudentModal from '../components/AddStudent';
+import { animate, stagger } from 'animejs';
+import { SkeletonCard, SkeletonTable } from '../components/Skeletons';
 
 export default function Clients() {
   // Estado para guardar la lista completa de clientes traída de la BD
@@ -121,6 +123,73 @@ export default function Clients() {
       return planName.includes('Pro') || planName.includes('Master');
     }).length
   };
+
+  // ========== ANIMACIONES CON ANIME.JS ==========
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (!loading && !hasAnimated.current) {
+      hasAnimated.current = true;
+
+      // 1. Animación de las tarjetas
+      animate('.stat-card', {
+        translateY: [30, 0],
+        opacity: [0, 1],
+        duration: 600,
+        delay: stagger(100),
+        easing: 'easeOutQuad'
+      });
+
+      // 2. Animación de los números
+      animate('.stat-number', {
+        innerHTML: function (el) {
+          return [0, el.getAttribute('data-value')];
+        },
+        round: 1,
+        duration: 1200,
+        easing: 'easeOutExpo'
+      });
+
+      // 3. Animación de la tabla
+      animate('.table-container', {
+        opacity: [0, 1],
+        duration: 500,
+        delay: 200,
+        easing: 'easeOutQuad'
+      });
+
+      // 4. Animación de filas
+      animate('.table-row', {
+        translateX: [-20, 0],
+        opacity: [0, 1],
+        duration: 400,
+        delay: stagger(50, { start: 300 }),
+        easing: 'easeOutQuad'
+      });
+    }
+  }, [loading]);
+
+  // Skeleton mientras carga
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 ml-64 p-8">
+          <div className="mb-8 animate-pulse">
+            <div className="h-7 w-32 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 w-48 bg-gray-100 rounded"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          <SkeletonTable rows={7} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Barra lateral navegable */}
@@ -136,7 +205,7 @@ export default function Clients() {
           </div>
           <button
             onClick={() => setIsModalOpen(true)} // Abrimos el modal aquí
-            className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
+            className="btn-primary bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
           >
             <UserPlus size={18} />
             Registrar Nuevo Alumno
@@ -146,10 +215,10 @@ export default function Clients() {
         {/* TARJETAS DE RESUMEN (Datos calculados dinámicamente) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Tarjeta Total */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+          <div className="stat-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start opacity-0">
             <div>
               <p className="text-gray-500 text-sm font-medium">Total Clientes</p>
-              <h3 className="text-3xl font-bold text-gray-800 mt-2">{stats.total}</h3>
+              <h3 className="stat-number text-3xl font-bold text-gray-800 mt-2" data-value={stats.total}>0</h3>
               <p className="text-xs text-gray-400 mt-1">Gestión completa</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
@@ -158,10 +227,10 @@ export default function Clients() {
           </div>
 
           {/* Tarjeta Activos */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+          <div className="stat-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start opacity-0">
             <div>
               <p className="text-gray-500 text-sm font-medium">Clientes Activos</p>
-              <h3 className="text-3xl font-bold text-gray-800 mt-2">{stats.active}</h3>
+              <h3 className="stat-number text-3xl font-bold text-gray-800 mt-2" data-value={stats.active}>0</h3>
               <p className="text-xs text-gray-400 mt-1">Con suscripción vigente</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
@@ -170,10 +239,10 @@ export default function Clients() {
           </div>
 
           {/* Tarjeta Premium */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+          <div className="stat-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start opacity-0">
             <div>
               <p className="text-gray-500 text-sm font-medium">Planes Premium</p>
-              <h3 className="text-3xl font-bold text-gray-800 mt-2">{stats.premium}</h3>
+              <h3 className="stat-number text-3xl font-bold text-gray-800 mt-2" data-value={stats.premium}>0</h3>
               <p className="text-xs text-gray-400 mt-1">Clientes con plan Pro</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
@@ -183,7 +252,7 @@ export default function Clients() {
         </div>
 
         {/* CONTENEDOR PRINCIPAL: FILTROS Y TABLA */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="table-container bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden opacity-0">
 
           {/* BARRA DE HERRAMIENTAS Y FILTROS */}
           <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-end">
@@ -305,7 +374,7 @@ export default function Clients() {
                     const isActive = lastSubscription?.status === 1 || lastSubscription?.status === 'active';
 
                     return (
-                      <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={client.id} className="table-row hover:bg-gray-50 transition-colors">
                         {/* Foto */}
                         <td className="px-6 py-4">
                           <img
@@ -351,10 +420,10 @@ export default function Clients() {
                         {/* BOTONES */}
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <button className="p-2 text-gray-400 hover:text-[#C2185B] hover:bg-pink-50 rounded-lg transition" title="Editar">
+                            <button className="btn-icon p-2 text-gray-400 hover:text-[#C2185B] hover:bg-pink-50 rounded-lg transition" title="Editar">
                               <Edit size={18} />
                             </button>
-                            <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Enviar Mensaje">
+                            <button className="btn-icon p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Enviar Mensaje">
                               <MessageSquare size={18} />
                             </button>
                           </div>
