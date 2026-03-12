@@ -153,9 +153,9 @@ const Configuration = () => {
         <div className="flex bg-gray-50 min-h-screen">
             <Sidebar />
 
-            <main className="flex-1 ml-64 p-8">
-                <header className="mb-8 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
+            <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+                <header className="mb-6 lg:mb-8 flex justify-between items-center">
+                    <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Configuración</h1>
                     {/* Avatar pequeño de la esquina superior derecha */}
                     <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-300">
                         {profile.photo_url ? (
@@ -166,9 +166,9 @@ const Configuration = () => {
                     </div>
                 </header>
 
-                <div className="flex gap-8">
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* --- SIDEBAR INTERNO DE CONFIG --- */}
-                    <div className="w-64 flex flex-col gap-2">
+                    <div className="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0">
                         <button
                             onClick={() => setActiveTab('account')}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'account' ? 'bg-pink-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}

@@ -174,7 +174,7 @@ export default function Clients() {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
-        <main className="flex-1 ml-64 p-8">
+        <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
           <div className="mb-8 animate-pulse">
             <div className="h-7 w-32 bg-gray-200 rounded mb-2"></div>
             <div className="h-4 w-48 bg-gray-100 rounded"></div>
@@ -195,20 +195,21 @@ export default function Clients() {
       {/* Barra lateral navegable */}
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
 
         {/* ENCABEZADO con Título y Botón de Crear */}
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Clientes</h1>
             <p className="text-sm text-gray-500">Panel de Administración</p>
           </div>
           <button
-            onClick={() => setIsModalOpen(true)} // Abrimos el modal aquí
-            className="btn-primary bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
+            onClick={() => setIsModalOpen(true)}
+            className="btn-primary bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 lg:px-5 py-2 lg:py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm text-sm lg:text-base"
           >
             <UserPlus size={18} />
-            Registrar Nuevo Alumno
+            <span className="hidden sm:inline">Registrar Nuevo Alumno</span>
+            <span className="sm:hidden">Nuevo</span>
           </button>
         </header>
 

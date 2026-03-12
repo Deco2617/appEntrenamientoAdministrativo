@@ -7,7 +7,7 @@ import api from '../services/api';
 import FeedbackModal from '../components/FeedbackModal';
 
 const CreateRoutine = () => {
-    const { id } = useParams(); 
+    const { id } = useParams();
     const isEditing = !!id;
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -41,7 +41,7 @@ const CreateRoutine = () => {
                     setRoutineName(routine.name);
                     setRoutineLevel(routine.level);
                     setRoutineDuration(routine.estimated_duration);
-                    
+
                     const mappedExercises = routine.exercises.map(ex => ({
                         ...ex,
                         uniqueId: ex.id + Date.now() + Math.random(),
@@ -154,9 +154,9 @@ const CreateRoutine = () => {
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden">
             <Sidebar />
-            <main className="flex-1 ml-64 flex h-full">
+            <main className="flex-1 ml-0 lg:ml-64 flex flex-col lg:flex-row h-full pt-14 lg:pt-0">
                 {/* COLUMNA IZQUIERDA: BANCO DE EJERCICIOS */}
-                <div className="w-[400px] bg-white border-r border-gray-200 flex flex-col h-full z-10 shadow-lg">
+                <div className="w-full lg:w-[400px] bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col h-[40vh] lg:h-full z-10 shadow-lg">
                     <div className="p-5 border-b border-gray-100">
                         <h2 className="font-bold text-gray-800 text-lg mb-4">Banco de Ejercicios</h2>
                         <div className="relative mb-4">

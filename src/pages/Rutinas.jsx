@@ -93,23 +93,23 @@ const Rutinas = () => {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8 flex flex-col h-full">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8 flex flex-col h-full overflow-auto">
         {/* HEADER */}
-        <header className="flex justify-between items-center mb-8 shrink-0">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8 shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Rutinas</h1>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Rutinas</h1>
             <p className="text-sm text-gray-500">Panel de Administración</p>
           </div>
-          <button onClick={() => navigate('/rutinas/nueva')} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors">
-            <Plus size={16} /> Crear Rutina
+          <button onClick={() => navigate('/rutinas/nueva')} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 lg:px-5 py-2 lg:py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors text-sm lg:text-base">
+            <Plus size={16} /> <span className="hidden sm:inline">Crear Rutina</span><span className="sm:hidden">Nueva</span>
           </button>
         </header>
 
-        <div className="flex gap-6 h-full overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full lg:overflow-hidden">
           {/* LISTA (IZQUIERDA) */}
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden min-h-0">
             {/* STATS */}
-            <div className="grid grid-cols-2 gap-4 shrink-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 shrink-0">
               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between h-20 items-center">
                 <div><p className="text-gray-400 text-xs font-bold uppercase">Total</p><h3 className="text-2xl font-bold text-gray-800">{stats.total}</h3></div>
                 <div className="p-2 bg-pink-50 rounded-lg text-[#C2185B]"><LayoutList size={20} /></div>
@@ -151,7 +151,7 @@ const Rutinas = () => {
           </div>
 
           {/* DETALLE (DERECHA) */}
-          <div className="w-[400px] bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden shrink-0">
+          <div className="w-full lg:w-[400px] bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col lg:h-full overflow-hidden shrink-0 min-h-[300px] lg:min-h-0">
             {selectedRoutine ? (
               <>
                 <div className="p-6 border-b border-gray-100 sticky top-0 bg-white z-10">

@@ -142,16 +142,16 @@ const Exercises = () => {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-8 transition-all duration-300">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8 transition-all duration-300">
 
         {/* HEADER */}
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Ejercicios</h1>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Ejercicios</h1>
             <p className="text-sm text-gray-500">Catálogo de ejercicios</p>
           </div>
-          <button onClick={openCreateModal} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors">
-            <Plus size={18} /> Nuevo Ejercicio
+          <button onClick={openCreateModal} className="bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 lg:px-5 py-2 lg:py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm transition-colors text-sm lg:text-base">
+            <Plus size={18} /> <span className="hidden sm:inline">Nuevo Ejercicio</span><span className="sm:hidden">Nuevo</span>
           </button>
         </header>
 

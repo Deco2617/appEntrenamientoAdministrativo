@@ -147,15 +147,15 @@ const Comidas = () => {
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
 
-        <header className="mb-8 flex justify-between items-center">
+        <header className="mb-6 lg:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Catálogo de Alimentos</h1>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Catálogo de Alimentos</h1>
             <p className="text-sm text-gray-500">Base de datos de ingredientes clasificados por tipo.</p>
           </div>
-          <button onClick={() => handleOpenModal()} className="flex items-center gap-2 bg-[#C2185B] hover:bg-[#ad1457] text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors">
-            <Plus size={20} /> Nuevo Alimento
+          <button onClick={() => handleOpenModal()} className="flex items-center gap-2 bg-[#C2185B] hover:bg-[#ad1457] text-white px-4 lg:px-5 py-2 lg:py-2.5 rounded-lg font-medium shadow-sm transition-colors text-sm lg:text-base">
+            <Plus size={20} /> <span className="hidden sm:inline">Nuevo Alimento</span><span className="sm:hidden">Nuevo</span>
           </button>
         </header>
 
@@ -169,7 +169,7 @@ const Comidas = () => {
         </div>
 
         {/* TABLA */}
-        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
               <tr>

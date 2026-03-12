@@ -180,21 +180,21 @@ const Nutricion = () => {
   return (
     <div className="flex bg-[#F8F9FA] min-h-screen font-sans">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8">
-        <header className="flex justify-between items-center mb-8">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Gestión de Nutrición</h1>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestión de Nutrición</h1>
             <p className="text-sm text-gray-500">Administra dietas y publícalas.</p>
           </div>
-          <button onClick={() => navigate('/nutricion/nueva')} className="bg-[#C2185B] text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-bold shadow-md hover:bg-[#A0134D] transition-all">
-            <Plus size={20} /> Nuevo Plan de Dieta
+          <button onClick={() => navigate('/nutricion/nueva')} className="bg-[#C2185B] text-white px-4 lg:px-6 py-2 lg:py-2.5 rounded-lg flex items-center gap-2 font-bold shadow-md hover:bg-[#A0134D] transition-all text-sm lg:text-base">
+            <Plus size={20} /> <span className="hidden sm:inline">Nuevo Plan de Dieta</span><span className="sm:hidden">Nuevo</span>
           </button>
         </header>
 
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
 
           {/* TABLA DE PLANES */}
-          <div className="col-span-7 flex flex-col gap-4">
+          <div className="lg:col-span-7 flex flex-col gap-4">
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
               <Search className="text-gray-400" size={20} />
               <input type="text" placeholder="Filtrar planes..." className="flex-1 outline-none text-sm text-gray-600" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
@@ -229,7 +229,7 @@ const Nutricion = () => {
           </div>
 
           {/* DETALLE DEL PLAN */}
-          <div className="col-span-5">
+          <div className="lg:col-span-5">
             {selectedPlan ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-8">
                 <div className="mb-6 border-b border-gray-50 pb-6">

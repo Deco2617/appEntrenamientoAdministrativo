@@ -222,10 +222,10 @@ const CreateDietPlan = () => {
     <div className="flex bg-[#F8F9FA] min-h-screen font-sans">
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-6 overflow-hidden h-screen flex flex-col">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-6 pt-16 lg:pt-6 overflow-auto lg:overflow-hidden h-screen flex flex-col">
 
         {/* --- NUEVA CABECERA MÁS LIMPIA (SOLUCIÓN DISEÑO FRÍO) --- */}
-        <header className="flex justify-between items-start mb-6 shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 lg:mb-6 shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/nutricion')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition">
               <ArrowLeft size={20} />
@@ -234,11 +234,11 @@ const CreateDietPlan = () => {
               <input
                 type="text"
                 placeholder="Nombre del Plan (Ej: Hipertrofia Avanzada)"
-                className="text-xl font-bold text-gray-800 placeholder-gray-300 border-none outline-none focus:ring-0 p-0 w-96 bg-transparent"
+                className="text-lg lg:text-xl font-bold text-gray-800 placeholder-gray-300 border-none outline-none focus:ring-0 p-0 w-full lg:w-96 bg-transparent"
                 value={planMeta.name}
                 onChange={e => setPlanMeta({ ...planMeta, name: e.target.value })}
               />
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <select
                   className="text-xs font-bold text-[#C2185B] bg-pink-50 border-none rounded py-1 pl-2 pr-6 cursor-pointer focus:ring-0"
                   value={planMeta.goal}
@@ -250,37 +250,37 @@ const CreateDietPlan = () => {
                   <option>Resistencia / Cardio</option>
                   <option>Mantenimiento/Salud General</option>
                 </select>
-                <span className="text-xs text-gray-400">|</span>
-                <span className="text-xs text-gray-400">Duración sugerida: 1 semana (cíclica)</span>
+                <span className="text-xs text-gray-400 hidden sm:inline">|</span>
+                <span className="text-xs text-gray-400 hidden sm:inline">Duración sugerida: 1 semana (cíclica)</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
             {/* Card de Calorías */}
-            <div className="flex flex-col items-end mr-4">
-              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Calorías Diarias ({activeDay})</span>
+            <div className="flex flex-col items-start lg:items-end mr-4">
+              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Calorías ({activeDay})</span>
               <div className="flex items-center gap-2">
                 <Flame className="text-orange-500" size={18} fill="currentColor" />
-                <span className="text-2xl font-bold text-gray-800">{calculateDailyCalories()}</span>
+                <span className="text-xl lg:text-2xl font-bold text-gray-800">{calculateDailyCalories()}</span>
                 <span className="text-sm text-gray-400 font-medium">/ 2200</span>
               </div>
             </div>
 
             <button
               onClick={handleSavePlan}
-              className="bg-[#C2185B] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-pink-100 hover:bg-[#A0134D] transition transform hover:-translate-y-0.5"
+              className="bg-[#C2185B] text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-pink-100 hover:bg-[#A0134D] transition transform hover:-translate-y-0.5 text-sm lg:text-base"
             >
-              <Save size={18} /> Guardar Plan
+              <Save size={18} /> <span className="hidden sm:inline">Guardar</span> Plan
             </button>
           </div>
         </header>
 
         {/* CONTENIDO PRINCIPAL */}
-        <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 overflow-hidden">
 
           {/* COLUMNA IZQUIERDA: BIBLIOTECA */}
-          <div className="col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+          <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden max-h-[300px] lg:max-h-none">
             <div className="p-4 border-b border-gray-50 bg-gray-50/50">
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
@@ -334,7 +334,7 @@ const CreateDietPlan = () => {
           </div>
 
           {/* COLUMNA DERECHA: LIENZO DE PLANIFICACIÓN */}
-          <div className="col-span-9 flex flex-col overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="lg:col-span-9 flex flex-col overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100">
 
             {/* Barra de Herramientas del Lienzo */}
             <div className="border-b border-gray-100 p-4 flex justify-between items-center bg-gray-50/30">
@@ -374,8 +374,8 @@ const CreateDietPlan = () => {
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, meal.type)}
                     className={`bg-white border rounded-xl p-5 shadow-sm hover:shadow-md transition-all group ${dragOverMeal === meal.type
-                        ? 'border-[#C2185B] ring-2 ring-[#C2185B] ring-opacity-30 bg-pink-50/30'
-                        : 'border-gray-100'
+                      ? 'border-[#C2185B] ring-2 ring-[#C2185B] ring-opacity-30 bg-pink-50/30'
+                      : 'border-gray-100'
                       }`}
                   >
 
@@ -394,8 +394,8 @@ const CreateDietPlan = () => {
                     <div className="space-y-2 min-h-[120px]">
                       {meal.foods.length === 0 ? (
                         <div className={`h-full border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-xs gap-2 py-4 transition-colors ${dragOverMeal === meal.type
-                            ? 'border-[#C2185B] text-[#C2185B] bg-pink-50/50'
-                            : 'border-gray-100 text-gray-300'
+                          ? 'border-[#C2185B] text-[#C2185B] bg-pink-50/50'
+                          : 'border-gray-100 text-gray-300'
                           }`}>
                           <Plus size={16} className={dragOverMeal === meal.type ? 'opacity-100' : 'opacity-50'} />
                           <span>{dragOverMeal === meal.type ? '¡Suelta aquí!' : 'Arrastra o selecciona alimentos'}</span>

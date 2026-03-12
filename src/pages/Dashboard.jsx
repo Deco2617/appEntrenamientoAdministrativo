@@ -122,13 +122,13 @@ export default function Dashboard() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-8">
-        <header className="flex justify-between items-start mb-8">
+      <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+        <header className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">
               Panel de Control
             </h1>
-            <p className="text-gray-500 mt-1">
+            <p className="text-gray-500 mt-1 text-sm lg:text-base">
               Bienvenido, {user?.first_name}. Aquí está el resumen de hoy.
             </p>
           </div>
